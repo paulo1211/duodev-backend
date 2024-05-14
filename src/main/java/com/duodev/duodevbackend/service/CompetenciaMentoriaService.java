@@ -19,11 +19,11 @@ public class CompetenciaMentoriaService {
         return competenciaMentoriaRepository.save(competenciaMentoria);
     }
 
-    public void deleteCompetenciaMentoria(Long id) {
+    public void deleteCompetenciaMentoria(int id) {
         competenciaMentoriaRepository.deleteById(id);
     }
 
-    public CompetenciaMentoria getCompetenciaMentoriaById(Long id) {
+    public CompetenciaMentoria getCompetenciaMentoriaById(int id) {
         return competenciaMentoriaRepository.findById(id).orElse(null);
     }
 
