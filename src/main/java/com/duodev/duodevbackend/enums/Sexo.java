@@ -1,6 +1,5 @@
 package com.duodev.duodevbackend.enums;
 
-
 public enum Sexo {
     MASCULINO,
     FEMININO,
