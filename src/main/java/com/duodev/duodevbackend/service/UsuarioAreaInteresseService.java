@@ -19,11 +19,11 @@ public class UsuarioAreaInteresseService {
         return usuarioAreaInteresseRepository.save(usuarioAreaInteresse);
     }
 
-    public void deleteUsuarioAreaInteresseById(Long id) {
+    public void deleteUsuarioAreaInteresseById(int id) {
         usuarioAreaInteresseRepository.deleteById(id);
     }
 
-    public UsuarioAreaInteresse getUsuarioAreaInteresseById(Long id) {
+    public UsuarioAreaInteresse getUsuarioAreaInteresseById(int id) {
         return usuarioAreaInteresseRepository.findById(id).orElse(null);
     }
 
