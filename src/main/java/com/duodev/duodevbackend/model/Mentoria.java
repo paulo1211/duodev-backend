@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "mentoria")
@@ -15,13 +14,14 @@ import java.time.LocalDateTime;
 @Setter
 public class Mentoria {
     @Id
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "id_usuario_mentorado")
     private Usuario usuarioMentorado;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "id_usuario_mentor")
     private Usuario usuarioMentor;
 
@@ -29,14 +29,11 @@ public class Mentoria {
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate dataInicial;
 
-    @NotNull
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate dataFinal;
 
-    @NotNull
     private int pontuacaoMentor;
 
-    @NotNull
     private int pontuacaoMentorado;
 
 }

@@ -1,24 +1,24 @@
 services:
-  mysql:
+  postgresql:
     healthcheck:
-      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       timeout: 15s
       retries: 3
-    image: 'mysql:5.7'
-    container_name: 'duodev-mysql'
+    image: 'postgres:latest'
+    container_name: 'duodev-postgresql'
     restart: unless-stopped
     networks:
       - "duodev-network"
     environment:
-      - 'MYSQL_DATABASE=duodev-db'
-      - 'MYSQL_PASSWORD=55zLt9'
-      - 'MYSQL_ROOT_PASSWORD=B8m1122PRQ'
-      - 'MYSQL_USER=duodev-user'
+      - 'POSTGRES_DB=duodev-db'
+      - 'POSTGRES_PASSWORD=duodev123'
+      - 'POSTGRES_USER=postgres'
     ports:
-      - '3306:3306'
+      - '5432:5432'
+
   duo-dev:
     depends_on:
-      mysql:
+      postgresql:
         condition: service_healthy
     build:
         context: .
@@ -29,14 +29,13 @@ services:
     networks:
       - "duodev-network"
     environment:
-      - 'DB_HOST=duodev-mysql'
-      - 'DB_PORT=3306'
+      - 'DB_HOST=duodev-db.cb6guugqkru4.eu-north-1.rds.amazonaws.com'
+      - 'DB_PORT=5432'
       - 'DB_DATABASE=duodev-db'
-      - 'DB_USERNAME=duodev-user'
-      - 'DB_PASSWORD=55zLt9'
+      - 'DB_USERNAME=postgres'
+      - 'DB_PASSWORD=duodev123'
     ports:
       - '8080:8080'
-
 
 networks:
   duodev-network:

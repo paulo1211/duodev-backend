@@ -19,11 +19,11 @@ public class MentoriaService {
         return mentoriaRepository.save(mentoria);
     }
 
-    public void deleteMentoria(Long id) {
+    public void deleteMentoria(int id) {
         mentoriaRepository.deleteById(id);
     }
 
-    public Mentoria getMentoriaById(Long id) {
+    public Mentoria getMentoriaById(int id) {
         return mentoriaRepository.findById(id).orElse(null);
     }
 

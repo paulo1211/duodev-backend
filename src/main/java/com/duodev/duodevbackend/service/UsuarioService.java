@@ -19,16 +19,26 @@ public class UsuarioService {
         return usuarioRepository.save(usuario);
     }
 
-    public void deleteUsuarioById(Long id) {
+    public void deleteUsuarioById(int id) {
         usuarioRepository.deleteById(id);
     }
 
-    public Usuario getUsuarioById(Long id) {
+    public Usuario getUsuarioById(int id) {
         return usuarioRepository.findById(id).orElse(null);
     }
 
     public Iterable<Usuario> getAllUsuario() {
         return usuarioRepository.findAll();
+    }
+
+    public void adicionarUsuario(Usuario usuario) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'adicionarUsuario'");
+    }
+
+    public boolean autenticarUsuario(String username, String password) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'autenticarUsuario'");
     }
 
 

@@ -26,5 +26,14 @@ public class UsuarioController {
   public Usuario Usuario(@RequestBody Usuario usuario) {
     return this.usuarioRepository.save(usuario);
   }
+
+  @Autowired
+    private UsuarioService usuarioService;
+
+    @PostMapping("/api/usuarios")
+    public ResponseEntity<String> adicionarUsuario(@RequestBody Usuario usuario) {
+        usuarioService.adicionarUsuario(usuario);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Usuário adicionado com sucesso!");
+    }
     
 }

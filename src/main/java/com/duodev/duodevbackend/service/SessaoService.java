@@ -18,18 +18,15 @@ public class SessaoService {
         return sessaoRepository.save(sessao);
     }
 
-    public void deleteSessaoById(Long id) {
+    public void deleteSessaoById(int id) {
         sessaoRepository.deleteById(id);
     }
 
-    public Sessao getSessaoById(Long id) {
+    public Sessao getSessaoById(int id) {
         return sessaoRepository.findById(id).orElse(null);
     }
 
     public Iterable<Sessao> getAllSessao() {
         return sessaoRepository.findAll();
     }
-
-
-
 }
