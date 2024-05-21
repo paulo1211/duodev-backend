@@ -31,5 +31,15 @@ public class UsuarioService {
         return usuarioRepository.findAll();
     }
 
+    public void adicionarUsuario(Usuario usuario) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'adicionarUsuario'");
+    }
+
+    public boolean autenticarUsuario(String username, String password) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'autenticarUsuario'");
+    }
+
 
 }
