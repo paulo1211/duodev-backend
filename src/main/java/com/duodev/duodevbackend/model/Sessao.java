@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
-import org.aspectj.weaver.ast.Not;
+import com.duodev.duodevbackend.enums.Status;
 
 import java.time.LocalDateTime;
 
@@ -16,7 +16,8 @@ import java.time.LocalDateTime;
 public class Sessao {
 
     @Id
-    private Integer id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
 
     @ManyToOne
     @JoinColumn(name = "id_mentoria")
@@ -26,11 +27,10 @@ public class Sessao {
     @JsonFormat(pattern = "dd/MM/yyyy HH:mm")
     private LocalDateTime dataHoraInicial;
 
-    @NotNull
     @JsonFormat(pattern = "dd/MM/yyyy HH:mm")
     private LocalDateTime dataHoraFinal;
 
     @NotNull
-    private Byte status;
+    private Enum<Status> status;
 
 }

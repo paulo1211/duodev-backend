@@ -4,26 +4,21 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
-
 @Entity
-@Table(name = "usuario_area_interesse")
+@Table(name = "usuarioareainteresse")
 @Getter
 @Setter
 public class UsuarioAreaInteresse {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @EmbeddedId
+    private UsuarioAreaInteresseId id;
 
     @ManyToOne
-    @JoinColumn(name = "usuario_id")
+    @MapsId("idUsuario")
+    @JoinColumn(name = "id_usuario")
     private Usuario usuario;
 
     @ManyToOne
-    @JoinColumn(name = "competencia_id")
+    @MapsId("idCompetencia")
+    @JoinColumn(name = "id_competencia")
     private  Competencia competencia;
-
-
-
 }

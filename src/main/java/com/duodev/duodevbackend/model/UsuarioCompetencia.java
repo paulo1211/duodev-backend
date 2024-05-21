@@ -8,17 +8,19 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name = "usuario_competencia")
+@Table(name = "usuariocompetencia")
+
 public class UsuarioCompetencia {
-
-    @Id
-    private Long id;
-
+    @EmbeddedId
+    private UsuarioCompetenciaId id;
+    
     @ManyToOne
+    @MapsId("idUsuario")
     @JoinColumn(name = "id_usuario")
     private Usuario usuario;
 
     @ManyToOne
+    @MapsId("idCompetencia")
     @JoinColumn(name = "id_competencia")
     private Competencia competencia;
 
