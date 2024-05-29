@@ -1,30 +1,49 @@
 package com.duodev.duodevbackend.controller;
 
-import java.util.List;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
 import com.duodev.duodevbackend.model.Sessao;
-import com.duodev.duodevbackend.repository.SessaoRepository;
+import com.duodev.duodevbackend.service.SessaoService;
+
+import java.util.List;
 
 @RestController
+@RequestMapping("/sessao")
 public class SessaoController {
 
-    private final SessaoRepository sessaoRepository;
+  @Autowired
+  private SessaoService sessaoService;
 
-  public SessaoController(SessaoRepository sessaoRepository) {
-    this.sessaoRepository = sessaoRepository;
-  }
-  
-  @GetMapping("/sessao")
-  public List<Sessao> findAllSessoes() {
-    return this.sessaoRepository.findAll();
+  @PostMapping
+  public ResponseEntity<Sessao> adicionarSessao(@RequestBody Sessao sessao) {
+    Sessao sessaoCriada = sessaoService.createSessao(sessao);
+    return ResponseEntity.status(HttpStatus.CREATED).body(sessaoCriada);
   }
 
-  @PostMapping("/sessao")
-  public Sessao Sessao(@RequestBody Sessao sessao) {
-    return this.sessaoRepository.save(sessao);
+  @GetMapping
+  public ResponseEntity<List<Sessao>> listarSessoes() {
+    List<Sessao> sessoes = sessaoService.getAllSessoes();
+    return ResponseEntity.ok(sessoes);
   }
-    
+
+  @GetMapping("/{id}")
+  public ResponseEntity<Sessao> obterSessao(@PathVariable Integer id) {
+    Sessao sessao = sessaoService.getSessaoById(id);
+    return ResponseEntity.ok(sessao);
+  }
+
+  @PutMapping("/{id}")
+  public ResponseEntity<Sessao> atualizarSessao(@PathVariable Integer id, @RequestBody Sessao sessao) {
+    Sessao sessaoAtualizada = sessaoService.updateSessao(id, sessao);
+    return ResponseEntity.ok(sessaoAtualizada);
+  }
+
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> deletarSessao(@PathVariable Integer id) {
+    sessaoService.deleteSessao(id);
+    return ResponseEntity.noContent().build();
+  }
 }

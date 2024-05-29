@@ -5,17 +5,21 @@ import com.duodev.duodevbackend.repository.CompetenciaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class CompetenciaService {
 
     @Autowired
     private CompetenciaRepository competenciaRepository;
 
-    public Competencia saveCompetencia(Competencia competencia) {
-        return competenciaRepository.save(competencia);
+    public CompetenciaService(CompetenciaRepository competenciaRepository) {
+        this.competenciaRepository = competenciaRepository;
     }
 
-    public Competencia updateCompetencia(Competencia competencia) {
+    public Competencia updateCompetencia(int id, Competencia competenciaDetails) {
+        Competencia competencia = getCompetenciaById(id);
+        competencia.setNome(competenciaDetails.getNome());
         return competenciaRepository.save(competencia);
     }
 
@@ -27,8 +31,11 @@ public class CompetenciaService {
         return competenciaRepository.findById(id).orElse(null);
     }
 
-    public Iterable<Competencia> getAllCompetencia() {
-        return competenciaRepository.findAll();
+    public Competencia createCompetencia(Competencia competencia) {
+        return competenciaRepository.save(competencia);
     }
 
+    public List<Competencia> getAllCompetencias() {
+            return competenciaRepository.findAll();
+    }
 }

@@ -24,13 +24,13 @@ public class Sessao {
     private Mentoria mentoria;
 
     @NotNull
-    @JsonFormat(pattern = "dd/MM/yyyy HH:mm")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime dataHoraInicial;
 
-    @JsonFormat(pattern = "dd/MM/yyyy HH:mm")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime dataHoraFinal;
 
     @NotNull
-    private Enum<Status> status;
+    private Status status;
 
 }

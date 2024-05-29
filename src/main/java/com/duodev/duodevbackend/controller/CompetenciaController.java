@@ -1,30 +1,49 @@
 package com.duodev.duodevbackend.controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import com.duodev.duodevbackend.model.Competencia;
-import com.duodev.duodevbackend.repository.CompetenciaRepository;
+import com.duodev.duodevbackend.service.CompetenciaService;
+
+import java.util.List;
 
 @RestController
+@RequestMapping("/competencia")
 public class CompetenciaController {
 
-    private final CompetenciaRepository competenciaRepository;
+  @Autowired
+  private CompetenciaService competenciaService;
 
-  public CompetenciaController(CompetenciaRepository competenciaRepository) {
-    this.competenciaRepository = competenciaRepository;
-  }
-  
-  @GetMapping("/competencia")
-  public Iterable<Competencia> findAllCompetencias() {
-    return this.competenciaRepository.findAll();
+  @PostMapping
+  public ResponseEntity<Competencia> adicionarCompetencia(@RequestBody Competencia competencia) {
+    Competencia competenciaCriada = competenciaService.createCompetencia(competencia);
+    return ResponseEntity.status(HttpStatus.CREATED).body(competenciaCriada);
   }
 
-  @PostMapping("/competencia")
-  public Competencia addOneCompetencia(@RequestBody Competencia competencia) {
-    return this.competenciaRepository.save(competencia);
+  @GetMapping
+  public ResponseEntity<List<Competencia>> listarCompetencias() {
+    List<Competencia> competencias = competenciaService.getAllCompetencias();
+    return ResponseEntity.ok(competencias);
   }
-    
+
+  @GetMapping("/{id}")
+  public ResponseEntity<Competencia> obterCompetencia(@PathVariable Integer id) {
+    Competencia competencia = competenciaService.getCompetenciaById(id);
+    return ResponseEntity.ok(competencia);
+  }
+
+  @PutMapping("/{id}")
+  public ResponseEntity<Competencia> atualizarCompetencia(@PathVariable Integer id, @RequestBody Competencia competencia) {
+    Competencia competenciaAtualizada = competenciaService.updateCompetencia(id, competencia);
+    return ResponseEntity.ok(competenciaAtualizada);
+  }
+
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> deletarCompetencia(@PathVariable Integer id) {
+    competenciaService.deleteCompetencia(id);
+    return ResponseEntity.noContent().build();
+  }
 }

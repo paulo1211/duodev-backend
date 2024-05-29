@@ -5,5 +5,5 @@ public enum Sexo {
     FEMININO,
     NAO_BINARIO,
     OUTRO,
-    PREFIRO_NAO_DECLARAR
+    PREFIRO_NAO_DECLARAR;
 }
