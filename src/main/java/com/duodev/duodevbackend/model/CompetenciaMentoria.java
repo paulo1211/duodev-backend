@@ -15,11 +15,27 @@ public class CompetenciaMentoria {
     @ManyToOne
     @MapsId("idMentoria")
     @JoinColumn(name = "id_mentoria")
-    private Mentoria mentoria;
+    private int mentoria;
 
     @ManyToOne
     @MapsId("idCompetencia")
     @JoinColumn(name = "id_competencia")
-    private Competencia competencia;
+    private String competencia;
 
+    
+    public int getInt() {
+        return mentoria;
+    }
+
+    public void setId(int mentoria) {
+        this.mentoria = mentoria;
+    }
+
+    public String getcompetencia() {
+        return competencia;
+    }
+
+    public void setcompetencia(String competencia) {
+        this.competencia = competencia;
+    }
 }

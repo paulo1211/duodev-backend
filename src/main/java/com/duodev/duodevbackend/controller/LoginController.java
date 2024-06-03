@@ -21,8 +21,8 @@ public class LoginController {
     }
 
     @PostMapping("/login")
-    public String loginSubmit(Model model, @RequestParam String username, @RequestParam String password) {
-        if (usuarioService.autenticarUsuario(username, password)) {
+    public String loginSubmit(Model model, @RequestParam String email, @RequestParam String senha) {
+        if (usuarioService.autenticarUsuario(email, senha)) {
             // Se as credenciais estiverem corretas, redireciona para a página inicial
             return "redirect:/";
         } else {

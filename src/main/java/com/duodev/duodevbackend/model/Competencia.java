@@ -19,5 +19,21 @@ public class Competencia {
     private int id;
 
     @NotNull
-    private String nome;
+    private String competenciaMentoria;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getcompetencia() {
+        return competenciaMentoria;
+    }
+
+    public void setcompetencia(String competenciaMentoria) {
+        this.competenciaMentoria = competenciaMentoria;
+    }
 }

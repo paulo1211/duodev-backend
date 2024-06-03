@@ -61,8 +61,6 @@ public class Usuario {
         return sexo;
     }
 
-
-
     public Usuario(int id, @NotNull String nome, @NotNull @CPF String cpf, @NotNull @Email String email,
             @NotNull String senha, @NotNull Enum<Sexo> sexo) {
         this.id = id;
@@ -73,7 +71,6 @@ public class Usuario {
         this.sexo = sexo;
     }
     public Usuario() {
-        //TODO Auto-generated constructor stub
     }
     public int getId() {
         return id;
