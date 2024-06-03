@@ -1,14 +1,26 @@
 package com.duodev.duodevbackend.service;
 
+import com.duodev.duodevbackend.enums.Status;
 import com.duodev.duodevbackend.exceptions.ResourceNotFoundException;
 import com.duodev.duodevbackend.model.Sessao;
 import com.duodev.duodevbackend.repository.SessaoRepository;
+import com.google.api.client.auth.oauth2.Credential;
+import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
+import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.client.util.DateTime;
+import com.google.api.client.util.store.FileDataStoreFactory;
+import com.google.api.core.ApiFuture;
 import com.google.api.gax.core.FixedCredentialsProvider;
-import com.google.apps.meet.v2.CreateSpaceRequest;
-import com.google.apps.meet.v2.Space;
-import com.google.apps.meet.v2.SpacesServiceClient;
-import com.google.apps.meet.v2.SpacesServiceSettings;
+import com.google.api.services.calendar.Calendar;
+import com.google.api.services.calendar.CalendarScopes;
+import com.google.api.services.calendar.model.*;
+import com.google.api.services.calendar.model.Event;
+import com.google.apps.meet.v2.*;
 import com.google.auth.Credentials;
 import com.google.auth.oauth2.ClientId;
 import com.google.auth.oauth2.DefaultPKCEProvider;
@@ -21,173 +33,145 @@ import java.awt.*;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import com.google.apps.meet.v2.Space.*;
+import java.util.concurrent.ExecutionException;
 
 @Service
 public class SessaoService {
 
-    /*
-    AINDA NÃO CRIA COM DATA E COM PARTICIPANTES
-     */
-
     @Autowired
     private SessaoRepository sessaoRepository;
 
-
+    /**
+     * Application name.
+     */
+    private static final String APPLICATION_NAME = "DuoDev";
+    /**
+     * Global instance of the JSON factory.
+     */
+    private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
+    /**
+     * Directory to store authorization tokens for this application.
+     */
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
 
-    private static final List<String> SCOPES = Collections
-            .singletonList("https://www.googleapis.com/auth/meetings.space.created");
-
+    /**
+     * Global instance of the scopes required by this quickstart.
+     * If modifying these scopes, delete your previously saved tokens/ folder.
+     */
+    private static final List<String> SCOPES =
+            Collections.singletonList(CalendarScopes.CALENDAR);
     private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
 
-    private static final String USER = "default";
-
-    // Simple file-based token storage for storing oauth tokens
-    private static final TokenStore TOKEN_STORE = new TokenStore() {
-        private Path pathFor(String id) {
-            return Paths.get(".", TOKENS_DIRECTORY_PATH, id + ".json");
-        }
-
-        @Override
-        public String load(String id) throws IOException {
-            if (!Files.exists(pathFor(id))) {
-                return null;
-            }
-            return Files.readString(pathFor(id));
-        }
-
-        @Override
-        public void store(String id, String token) throws IOException {
-            Files.createDirectories(Paths.get(".", TOKENS_DIRECTORY_PATH));
-            Files.writeString(pathFor(id), token);
-        }
-
-        @Override
-        public void delete(String id) throws IOException {
-            if (!Files.exists(pathFor(id))) {
-                return;
-            }
-            Files.delete(pathFor(id));
-        }
-    };
-
     /**
-     * Initialize a UserAuthorizer for local authorization.
+     * Creates an authorized Credential object.
      *
-     * @param callbackUri
-     * @return
-     */
-    private static UserAuthorizer getAuthorizer(URI callbackUri) throws IOException {
-        // Load client secrets.
-        try (InputStream in = SessaoService.class.getResourceAsStream(CREDENTIALS_FILE_PATH)) {
-            if (in == null) {
-                throw new FileNotFoundException("Resource not found: " + CREDENTIALS_FILE_PATH);
-            }
-
-            ClientId clientId = ClientId.fromStream(in);
-
-            UserAuthorizer authorizer = UserAuthorizer.newBuilder()
-                    .setClientId(clientId)
-                    .setCallbackUri(callbackUri)
-                    .setScopes(SCOPES)
-                    .setPKCEProvider(new DefaultPKCEProvider() {
-                        // Temporary fix for https://github.com/googleapis/google-auth-library-java/issues/1373
-                        @Override
-                        public String getCodeChallenge() {
-                            return super.getCodeChallenge().split("=")[0];
-                        }
-                    })
-                    .setTokenStore(TOKEN_STORE).build();
-            return authorizer;
-        }
-    }
-
-    /**
-     * Run the OAuth2 flow for local/installed app.
-     *
+     * @param HTTP_TRANSPORT The network HTTP Transport.
      * @return An authorized Credential object.
      * @throws IOException If the credentials.json file cannot be found.
      */
-    private static Credentials getCredentials()
-            throws Exception {
-
-        LocalServerReceiver receiver = new LocalServerReceiver.Builder().build();
-        try {
-            URI callbackUri = URI.create(receiver.getRedirectUri());
-            UserAuthorizer authorizer = getAuthorizer(callbackUri);
-
-            Credentials credentials = authorizer.getCredentials(USER);
-            if (credentials != null) {
-                return credentials;
-            }
-
-            URL authorizationUrl = authorizer.getAuthorizationUrl(USER, "", null);
-            if (Desktop.isDesktopSupported() &&
-                    Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-                Desktop.getDesktop().browse(authorizationUrl.toURI());
-            } else {
-                // achar outra foroma de autorizar
-                System.out.printf("Open the following URL to authorize access: %s\n",
-                        authorizationUrl.toExternalForm());
-            }
-
-            String code = receiver.waitForCode();
-            credentials = authorizer.getAndStoreCredentialsFromCode(USER, code, callbackUri);
-            return credentials;
-        } finally {
-            receiver.stop();
+    private static Credential getCredentials(final NetHttpTransport HTTP_TRANSPORT)
+            throws IOException {
+        // Load client secrets.
+        InputStream in = SessaoService.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
+        if (in == null) {
+            throw new FileNotFoundException("Resource not found: " + CREDENTIALS_FILE_PATH);
         }
+        GoogleClientSecrets clientSecrets =
+                GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
+
+        // Build flow and trigger user authorization request.
+        GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
+                HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES)
+                .setDataStoreFactory(new FileDataStoreFactory(new java.io.File(TOKENS_DIRECTORY_PATH)))
+                .setAccessType("offline")
+                .build();
+        LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(8888).build();
+        Credential credential = new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
+        return credential;
     }
 
-//    public void createSessao() {
-//        try {
-//            // Initialize the API client
-//            HttpTransport httpTransport = new com.google.api.client.http.javanet.NetHttpTransport();
-//            JsonFactory jsonFactory = new GsonFactory();
-//            Meet service = new Meet.Builder(httpTransport, jsonFactory, getCredentials())
-//                    .setApplicationName("DuoDev")
-//                    .build();
-//
-//            // Create a new meeting
-//            CreateMeetingRequest request = new CreateMeetingRequest()
-//                    .setMeeting(new Meeting()
-//                            .setConferenceData(new ConferenceData()
-//                                    .setCreateRequest(new CreateConferenceRequest()
-//                                            .setRequestId(UUID.randomUUID().toString()))));
-//            CreateMeetingResponse response = service.spaces().meetings().create("spaces/AAAAWJjUf3I", request).execute();
-//
-//            // Print the response
-//            System.out.println("Created meeting: " + response.toPrettyString());
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+    public static Calendar getCalendarService() throws IOException {
+        final NetHttpTransport HTTP_TRANSPORT = new NetHttpTransport();
+        Credential credential = getCredentials(HTTP_TRANSPORT);
 
-    public String createSessao() throws Exception {
-        String responseSession = "";
-        Credentials credentials = getCredentials();
-        SpacesServiceSettings settings = SpacesServiceSettings.newBuilder()
-                .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
+        return new Calendar.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
+                .setApplicationName(APPLICATION_NAME)
                 .build();
 
-        try (SpacesServiceClient spacesServiceClient = SpacesServiceClient.create(settings)) {
-            CreateSpaceRequest request = CreateSpaceRequest.newBuilder()
-                    .setSpace(Space.newBuilder().build())
-                    .build();
-            Space response = spacesServiceClient.createSpace(request);
-            responseSession = response.getMeetingUri();
-        } catch (IOException e) {
-            // TODO(developer): Handle errors
-            e.printStackTrace();
-        }
-        return responseSession;
     }
+
+    public String createSessao(Sessao novaSessao) throws IOException {
+        String retorno = "";
+        if (novaSessao.getDataHoraInicial().isAfter(novaSessao.getDataHoraFinal())) {
+            retorno = "A data de inicío não pode ser posterior que a data final.";
+            return retorno;
+        } else if (novaSessao.getDataHoraInicial().isBefore(java.time.LocalDateTime.now())) {
+            retorno = "A data de inicío não pode ser anterior que a data atual.";
+            return retorno;
+        } else {
+            Calendar service = getCalendarService();
+            com.google.api.services.calendar.model.Event event = new com.google.api.services.calendar.model.Event()
+                    .setSummary("DuoDev Mentoria")
+                    .setLocation("Google Meet")
+                    .setDescription("Encontro criado por DuoDev para a mentoria");
+
+
+            // formato da data 2024-06-03T09:00:00-03:00
+            String dataHoraInicial = novaSessao.getDataHoraInicial().toString() + ":00-03:00";
+
+            DateTime startDateTime = new DateTime(dataHoraInicial);
+            EventDateTime start = new EventDateTime()
+                    .setDateTime(startDateTime)
+                    .setTimeZone("America/Sao_Paulo");
+            event.setStart(start);
+
+            // formato da data 2024-06-03T09:00:00-03:00
+            String dataHoraFinal = novaSessao.getDataHoraFinal().toString() + ":00-03:00";
+            DateTime endDateTime = new DateTime(dataHoraFinal);
+            EventDateTime end = new EventDateTime()
+                    .setDateTime(endDateTime)
+                    .setTimeZone("America/Sao_Paulo");
+            event.setEnd(end);
+
+            EventAttendee[] attendees = new EventAttendee[]{
+                    new EventAttendee().setEmail("duodev7@gmail.com"),
+                    new EventAttendee().setEmail("pauloaraujo1211@outlook.com")
+            };
+
+            event.setAttendees(Arrays.asList(attendees));
+            String calendarId = "primary";
+            // cria a reunião no meet
+
+            ConferenceSolutionKey conferenceSolutionKey = new ConferenceSolutionKey();
+            conferenceSolutionKey.setType("hangoutsMeet");
+            CreateConferenceRequest createConferenceRequest = new CreateConferenceRequest();
+            createConferenceRequest.setRequestId("sample-request-id"); // Generate a unique ID for this request
+
+            ConferenceData conferenceData = new ConferenceData();
+            conferenceData.setCreateRequest(createConferenceRequest);
+            event.setConferenceData(conferenceData);
+            Event createdEvent = service.events().insert(calendarId, event).setConferenceDataVersion(1).execute();
+
+            novaSessao.setStatus(Status.AGENDADO);
+
+            sessaoRepository.save(novaSessao);
+
+            retorno = createdEvent.getHtmlLink();
+            return retorno;
+        }
+
+    }
+
 
     public List<Sessao> getAllSessoes() {
         return sessaoRepository.findAll();
