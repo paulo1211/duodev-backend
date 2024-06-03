@@ -18,8 +18,8 @@ public class SessaoController {
   private SessaoService sessaoService;
 
   @PostMapping
-  public ResponseEntity<String> adicionarSessao() throws Exception {
-    String sessaoCriada = sessaoService.createSessao();
+  public ResponseEntity<String> adicionarSessao(@RequestBody Sessao sessao) throws Exception {
+    String sessaoCriada = sessaoService.createSessao(sessao);
     return ResponseEntity.status(HttpStatus.CREATED).body(sessaoCriada);
   }
 
