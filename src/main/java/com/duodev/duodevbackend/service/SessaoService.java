@@ -39,6 +39,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -110,7 +111,8 @@ public class SessaoService {
 
     }
 
-    public String createSessao(Sessao novaSessao) throws IOException {
+
+    public String createSessao(Sessao novaSessao, String emailMentorado, String emailMentor) throws IOException {
         String retorno = "";
         if (novaSessao.getDataHoraInicial().isAfter(novaSessao.getDataHoraFinal())) {
             retorno = "A data de inicío não pode ser posterior que a data final.";
@@ -144,8 +146,8 @@ public class SessaoService {
             event.setEnd(end);
 
             EventAttendee[] attendees = new EventAttendee[]{
-                    new EventAttendee().setEmail("duodev7@gmail.com"),
-                    new EventAttendee().setEmail("pauloaraujo1211@outlook.com")
+                    new EventAttendee().setEmail(emailMentor),
+                    new EventAttendee().setEmail(emailMentorado),
             };
 
             event.setAttendees(Arrays.asList(attendees));
@@ -155,7 +157,7 @@ public class SessaoService {
             ConferenceSolutionKey conferenceSolutionKey = new ConferenceSolutionKey();
             conferenceSolutionKey.setType("hangoutsMeet");
             CreateConferenceRequest createConferenceRequest = new CreateConferenceRequest();
-            createConferenceRequest.setRequestId("sample-request-id"); // Generate a unique ID for this request
+            createConferenceRequest.setRequestId("sample-request-id");
 
             ConferenceData conferenceData = new ConferenceData();
             conferenceData.setCreateRequest(createConferenceRequest);
@@ -163,10 +165,12 @@ public class SessaoService {
             Event createdEvent = service.events().insert(calendarId, event).setConferenceDataVersion(1).execute();
 
             novaSessao.setStatus(Status.AGENDADO);
-
+            novaSessao.setLinkMeet(createdEvent.getHangoutLink());
+            novaSessao.setEventGoogleCalendarId(createdEvent.getId());
             sessaoRepository.save(novaSessao);
 
-            retorno = createdEvent.getHtmlLink();
+
+            retorno = createdEvent.getHtmlLink() + " " + createdEvent.getHangoutLink() + " " + createdEvent.getId();
             return retorno;
         }
 
@@ -177,21 +181,135 @@ public class SessaoService {
         return sessaoRepository.findAll();
     }
 
+
+    // tem que ver se deve estourar uma exceção mesmo
     public Sessao getSessaoById(int id) {
-        return sessaoRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Sessao not found"));
-    }
-    public Sessao updateSessao(int id, Sessao sessaoDetails) {
-        Sessao sessao = getSessaoById(id);
-        sessao.setDataHoraInicial(sessaoDetails.getDataHoraInicial());
-        sessao.setDataHoraFinal(sessaoDetails.getDataHoraFinal());
-        sessao.setStatus(sessaoDetails.getStatus());
-        sessao.setMentoria(sessaoDetails.getMentoria());
-
-        return sessaoRepository.save(sessao);
+        return sessaoRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Sessão não encontrada"));
     }
 
-    public void deleteSessao(int id) {
+    public String updateSessao(int idSessao, Sessao sessaoAtualizada) throws IOException {
+
+        Sessao sessaoAtual = getSessaoById(idSessao);
+
+        String eventId = sessaoAtual.getEventGoogleCalendarId();
+
+        //transform object in string
+        System.out.println("SESSÃO" + sessaoAtualizada);
+
+        String retorno = "";
+        // Verifica se a sessão tem um ID de evento válido
+        if (eventId == null || eventId.isEmpty()) {
+            retorno = "ID do evento inválido.";
+            return retorno;
+        }
+
+        // Verifica se a sessão existe
+        if (!sessaoRepository.existsById(sessaoAtual.getId())) {
+            retorno = "Sessão não encontrada.";
+            return retorno;
+        } else if (sessaoAtual.getDataHoraInicial().isAfter(sessaoAtual.getDataHoraFinal())) {
+            retorno = "A data de inicío não pode ser posterior que a data final.";
+            return retorno;
+        } else if (sessaoAtual.getDataHoraInicial().isBefore(java.time.LocalDateTime.now())) {
+            retorno = "A data de inicío não pode ser anterior que a data atual.";
+            return retorno;
+        } else {
+            Sessao sessao = getSessaoById(sessaoAtualizada.getId());
+            sessao.setDataHoraInicial(sessaoAtualizada.getDataHoraInicial());
+            sessao.setDataHoraFinal(sessaoAtualizada.getDataHoraFinal());
+            sessao.setStatus(sessaoAtualizada.getStatus());
+            sessao.setMentoria(sessaoAtualizada.getMentoria());
+
+            Calendar service = getCalendarService();
+            // Recupera o evento existente
+            Event event = service.events().get("primary", eventId).execute();
+
+            // Atualiza os detalhes do evento conforme necessário
+            event.setSummary("DuoDev Mentoria Atualizada")
+                    .setDescription("Descrição atualizada do encontro");
+
+            // Atualiza a data e hora de início e fim, se necessário
+            String dataHoraInicial = sessaoAtualizada.getDataHoraInicial().toString() + ":00-03:00";
+            DateTime startDateTime = new DateTime(dataHoraInicial);
+            EventDateTime start = new EventDateTime()
+                    .setDateTime(startDateTime)
+                    .setTimeZone("America/Sao_Paulo");
+            event.setStart(start);
+
+            String dataHoraFinal = sessaoAtualizada.getDataHoraFinal().toString() + ":00-03:00";
+            DateTime endDateTime = new DateTime(dataHoraFinal);
+            EventDateTime end = new EventDateTime()
+                    .setDateTime(endDateTime)
+                    .setTimeZone("America/Sao_Paulo");
+            event.setEnd(end);
+
+
+            // Atualiza os dados da conferência, se necessário
+            // Note que a atualização do link do Meet pode não ser direta e pode exigir a criação de uma nova conferência
+            // ...
+
+            // Envia a atualização para o Google Calendar
+            Event updatedEvent = service.events().update("primary", eventId, event).setConferenceDataVersion(1).execute();
+
+            // Atualiza a sessão com os novos detalhes
+            sessaoAtualizada.setDataHoraFinal(LocalDateTime.parse(dataHoraFinal));
+            sessaoAtualizada.setDataHoraInicial(LocalDateTime.parse(dataHoraInicial));
+            sessaoAtualizada.setEventGoogleCalendarId(updatedEvent.getId());
+            // ... salve as atualizações na sessão conforme necessário
+
+            retorno = updatedEvent.getHtmlLink() + " " + updatedEvent.getHangoutLink() + " " + updatedEvent.getId();
+        }
+
+        return retorno;
+    }
+
+
+    public void deleteSessao(Integer id) {
         Sessao sessao = getSessaoById(id);
-        sessaoRepository.delete(sessao);
+
+        try {
+            Calendar service = getCalendarService();
+            service.events().delete("primary", sessao.getEventGoogleCalendarId()).execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        sessao.setStatus(Status.CANCELADO);
+        sessaoRepository.save(sessao);
+
     }
 }
+
+
+
+//    public Sessao updateSessao(int id, Sessao sessaoDetails) throws IOException {
+//
+//        Calendar service = getCalendarService();
+//        com.google.api.services.calendar.model.Calendar calendar =
+//                service.calendars().get("primary").execute();
+//
+//
+//
+//        // formato da data 2024-06-03T09:00:00-03:00
+//        String dataHoraInicial = sessaoDetails.getDataHoraInicial().toString() + ":00-03:00";
+//
+//
+//
+//        com.google.api.services.calendar.model.Calendar updatedCalendar =
+//                service.calendars().update(calendar.getId(), calendar).execute();
+//
+//
+//
+//
+//
+//
+//
+//        Sessao sessao = getSessaoById(id);
+//        sessao.setDataHoraInicial(sessaoDetails.getDataHoraInicial());
+//        sessao.setDataHoraFinal(sessaoDetails.getDataHoraFinal());
+//        sessao.setStatus(sessaoDetails.getStatus());
+//        sessao.setMentoria(sessaoDetails.getMentoria());
+//
+//        return sessaoRepository.save(sessao);
+//    }
+//

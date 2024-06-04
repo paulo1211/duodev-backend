@@ -33,4 +33,19 @@ public class Sessao {
     @NotNull
     private Status status;
 
+    private String linkMeet;
+    private String eventGoogleCalendarId;
+
+    @Override
+    public String toString() {
+        return "Sessao{" +
+                "id=" + id +
+                ", mentoria=" + mentoria +
+                ", dataHoraInicial=" + dataHoraInicial +
+                ", dataHoraFinal=" + dataHoraFinal +
+                ", status=" + status +
+                ", linkMeet='" + linkMeet + '\'' +
+                ", eventGoogleCalendarId='" + eventGoogleCalendarId + '\'' +
+                '}';
+    }
 }
