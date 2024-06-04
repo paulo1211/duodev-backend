@@ -1,0 +1,41 @@
+services:
+  postgresql:
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      timeout: 15s
+      retries: 3
+    image: 'postgres:latest'
+    container_name: 'duodev-postgresql'
+    restart: unless-stopped
+    networks:
+      - "duodev-network"
+    environment:
+      - 'POSTGRES_DB=duodev-db'
+      - 'POSTGRES_PASSWORD=duodev123'
+      - 'POSTGRES_USER=postgres'
+    ports:
+      - '5432:5432'
+
+  duo-dev:
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    build:
+        context: .
+        dockerfile: Dockerfile
+    image: 'duodev/duodev-backend:0.0.1'
+    container_name: 'duodev-backend'
+    restart: unless-stopped
+    networks:
+      - "duodev-network"
+    environment:
+      - 'DB_HOST=duodev-db.cb6guugqkru4.eu-north-1.rds.amazonaws.com'
+      - 'DB_PORT=5432'
+      - 'DB_DATABASE=duodev-db'
+      - 'DB_USERNAME=postgres'
+      - 'DB_PASSWORD=duodev123'
+    ports:
+      - '8080:8080'
+
+networks:
+  duodev-network:
