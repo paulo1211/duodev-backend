@@ -194,11 +194,11 @@ public class SessaoService {
         return sessaoRepository.findByDataHoraInicialBetween(dataHoraInicial, dataHoraFinal);
     }
 
-    public List<Sessao> findByMentoria(Mentoria mentoria) {
+    public List<Sessao> getSessoesByMentoria(Mentoria mentoria) {
         return sessaoRepository.findByMentoria(mentoria);
     }
 
-    public List<Sessao> findByStatus(String status) {
+    public List<Sessao> getSessoesByStatus(String status) {
         return sessaoRepository.findByStatus(status);
     }
 
