@@ -29,13 +29,8 @@ public class SessaoController {
   }
 
   @GetMapping
-  public ResponseEntity<List<Sessao>> listarSessoes() {
-    try {
-      List<Sessao> sessoes = sessaoService.getAllSessoes();
-      return ResponseEntity.ok(sessoes);
-    } catch (ArrayIndexOutOfBoundsException e) {
-      System.out.println("Tamanho da lista" + sessaoService.getAllSessoes().size());
-    }
+  public ResponseEntity<List<Sessao>> listarSessoes() throws IOException {
+
     return ResponseEntity.ok(sessaoService.getAllSessoes());
   }
 
@@ -47,9 +42,9 @@ public class SessaoController {
 
   @PutMapping("/{id}")
   public ResponseEntity<String> atualizarSessao(@PathVariable int id, @RequestBody Sessao sessao) throws IOException {
-    System.out.println("CHEGANDO NO CONTROLLER" + sessao.toString());
     String sessaoAtualizada = sessaoService.updateSessao(id, sessao);
     return ResponseEntity.ok(sessaoAtualizada);
+
   }
 
   @DeleteMapping("/{id}")

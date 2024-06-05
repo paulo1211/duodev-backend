@@ -14,37 +14,21 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.DateTime;
 import com.google.api.client.util.store.FileDataStoreFactory;
-import com.google.api.core.ApiFuture;
-import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.calendar.model.*;
 import com.google.api.services.calendar.model.Event;
-import com.google.apps.meet.v2.*;
-import com.google.auth.Credentials;
-import com.google.auth.oauth2.ClientId;
-import com.google.auth.oauth2.DefaultPKCEProvider;
-import com.google.auth.oauth2.TokenStore;
-import com.google.auth.oauth2.UserAuthorizer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.awt.*;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URI;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import com.google.apps.meet.v2.Space.*;
-import java.util.concurrent.ExecutionException;
+
 
 @Service
 public class SessaoService {
@@ -90,7 +74,6 @@ public class SessaoService {
         GoogleClientSecrets clientSecrets =
                 GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
 
-        // Build flow and trigger user authorization request.
         GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
                 HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES)
                 .setDataStoreFactory(new FileDataStoreFactory(new java.io.File(TOKENS_DIRECTORY_PATH)))
@@ -110,7 +93,6 @@ public class SessaoService {
                 .build();
 
     }
-
 
     public String createSessao(Sessao novaSessao, String emailMentorado, String emailMentor) throws IOException {
         String retorno = "";
@@ -164,20 +146,24 @@ public class SessaoService {
             event.setConferenceData(conferenceData);
             Event createdEvent = service.events().insert(calendarId, event).setConferenceDataVersion(1).execute();
 
+
             novaSessao.setStatus(Status.AGENDADO);
             novaSessao.setLinkMeet(createdEvent.getHangoutLink());
             novaSessao.setEventGoogleCalendarId(createdEvent.getId());
+            novaSessao.setCalendarId(createdEvent.getId());
             sessaoRepository.save(novaSessao);
 
 
-            retorno = createdEvent.getHtmlLink() + " " + createdEvent.getHangoutLink() + " " + createdEvent.getId();
+            retorno = createdEvent.getHtmlLink() + " " + createdEvent.getHangoutLink() + " " + createdEvent.getId()
+            + " " + createdEvent.getConferenceData().getConferenceId() + " " + createdEvent.getConferenceData()
+                    .getEntryPoints().get(0).getEntryPointType();
             return retorno;
         }
 
     }
 
 
-    public List<Sessao> getAllSessoes() {
+    public List<Sessao> getAllSessoes() throws IOException {
         return sessaoRepository.findAll();
     }
 
@@ -190,7 +176,6 @@ public class SessaoService {
     public String updateSessao(int idSessao, Sessao sessaoAtualizada) throws IOException {
 
         Sessao sessaoAtual = getSessaoById(idSessao);
-
         String eventId = sessaoAtual.getEventGoogleCalendarId();
 
         //transform object in string
@@ -214,11 +199,12 @@ public class SessaoService {
             retorno = "A data de inicío não pode ser anterior que a data atual.";
             return retorno;
         } else {
-            Sessao sessao = getSessaoById(sessaoAtualizada.getId());
-            sessao.setDataHoraInicial(sessaoAtualizada.getDataHoraInicial());
-            sessao.setDataHoraFinal(sessaoAtualizada.getDataHoraFinal());
-            sessao.setStatus(sessaoAtualizada.getStatus());
-            sessao.setMentoria(sessaoAtualizada.getMentoria());
+            sessaoAtual.setDataHoraInicial(sessaoAtualizada.getDataHoraInicial());
+            sessaoAtual.setDataHoraFinal(sessaoAtualizada.getDataHoraFinal());
+            sessaoAtual.setMentoria(sessaoAtualizada.getMentoria());
+            sessaoAtual.setStatus(sessaoAtualizada.getStatus());
+            sessaoAtual.setMentoria(sessaoAtualizada.getMentoria());
+
 
             Calendar service = getCalendarService();
             // Recupera o evento existente
@@ -229,35 +215,36 @@ public class SessaoService {
                     .setDescription("Descrição atualizada do encontro");
 
             // Atualiza a data e hora de início e fim, se necessário
-            String dataHoraInicial = sessaoAtualizada.getDataHoraInicial().toString() + ":00-03:00";
-            DateTime startDateTime = new DateTime(dataHoraInicial);
+            String dataHoraInicialCalendar = sessaoAtualizada.getDataHoraInicial().toString() + ":00-03:00";
+            DateTime startDateTime = new DateTime(dataHoraInicialCalendar);
             EventDateTime start = new EventDateTime()
                     .setDateTime(startDateTime)
                     .setTimeZone("America/Sao_Paulo");
             event.setStart(start);
 
-            String dataHoraFinal = sessaoAtualizada.getDataHoraFinal().toString() + ":00-03:00";
-            DateTime endDateTime = new DateTime(dataHoraFinal);
+            String dataHoraFinalCalendar = sessaoAtualizada.getDataHoraFinal().toString() + ":00-03:00";
+            DateTime endDateTime = new DateTime(dataHoraFinalCalendar);
             EventDateTime end = new EventDateTime()
                     .setDateTime(endDateTime)
                     .setTimeZone("America/Sao_Paulo");
             event.setEnd(end);
 
 
-            // Atualiza os dados da conferência, se necessário
-            // Note que a atualização do link do Meet pode não ser direta e pode exigir a criação de uma nova conferência
-            // ...
-
             // Envia a atualização para o Google Calendar
-            Event updatedEvent = service.events().update("primary", eventId, event).setConferenceDataVersion(1).execute();
+            Event updatedEvent = service.events().update("primary", eventId, event).setConferenceDataVersion(1)
+                    .execute();
+
 
             // Atualiza a sessão com os novos detalhes
-            sessaoAtualizada.setDataHoraFinal(LocalDateTime.parse(dataHoraFinal));
-            sessaoAtualizada.setDataHoraInicial(LocalDateTime.parse(dataHoraInicial));
-            sessaoAtualizada.setEventGoogleCalendarId(updatedEvent.getId());
-            // ... salve as atualizações na sessão conforme necessário
+            sessaoAtualizada.setDataHoraFinal(LocalDateTime.parse(sessaoAtualizada.getDataHoraFinal().toString()));
+            sessaoAtualizada.setDataHoraInicial(LocalDateTime.parse(sessaoAtualizada.getDataHoraInicial().toString()));
+            sessaoAtualizada.setEventGoogleCalendarId(sessaoAtual.getEventGoogleCalendarId());
+            sessaoAtualizada.setLinkMeet(sessaoAtual.getLinkMeet());
 
+
+            sessaoRepository.save(sessaoAtualizada);
             retorno = updatedEvent.getHtmlLink() + " " + updatedEvent.getHangoutLink() + " " + updatedEvent.getId();
+
         }
 
         return retorno;

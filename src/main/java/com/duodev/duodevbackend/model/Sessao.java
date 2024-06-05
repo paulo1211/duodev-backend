@@ -35,6 +35,7 @@ public class Sessao {
 
     private String linkMeet;
     private String eventGoogleCalendarId;
+    private String calendarId;
 
     @Override
     public String toString() {
@@ -46,6 +47,8 @@ public class Sessao {
                 ", status=" + status +
                 ", linkMeet='" + linkMeet + '\'' +
                 ", eventGoogleCalendarId='" + eventGoogleCalendarId + '\'' +
+                ", calendarId='" + calendarId + '\'' +
+
                 '}';
     }
 }
