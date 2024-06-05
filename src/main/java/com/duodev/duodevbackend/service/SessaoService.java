@@ -198,7 +198,7 @@ public class SessaoService {
         return sessaoRepository.findByMentoria(mentoria);
     }
 
-    public List<Sessao> getSessoesByStatus(String status) {
+    public List<Sessao> getSessoesByStatus(Status status) {
         return sessaoRepository.findByStatus(status);
     }
 

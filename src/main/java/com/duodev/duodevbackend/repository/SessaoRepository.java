@@ -1,5 +1,6 @@
 package com.duodev.duodevbackend.repository;
 
+import com.duodev.duodevbackend.enums.Status;
 import com.duodev.duodevbackend.model.Mentoria;
 import com.duodev.duodevbackend.model.Sessao;
 import org.hibernate.annotations.processing.SQL;
@@ -19,6 +20,6 @@ public interface SessaoRepository extends JpaRepository<Sessao, Integer> {
 
     List<Sessao> findByMentoria(Mentoria mentoria);
 
-    List<Sessao> findByStatus(String status);
+    List<Sessao> findByStatus(Status status);
 
 }

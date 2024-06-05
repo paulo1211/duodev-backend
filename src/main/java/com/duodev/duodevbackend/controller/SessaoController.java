@@ -1,6 +1,7 @@
 package com.duodev.duodevbackend.controller;
 
 import com.duodev.duodevbackend.dto.SessaoDto;
+import com.duodev.duodevbackend.enums.Status;
 import com.duodev.duodevbackend.model.Mentoria;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -53,11 +54,12 @@ public class SessaoController {
         return ResponseEntity.ok(sessoes);
     }
 
-    @GetMapping("/status/{status}")
-    public ResponseEntity<List<Sessao>> obterSessoesPorStatus(@PathVariable String status) {
-        List<Sessao> sessoes = sessaoService.getSessoesByStatus(status);
-        return ResponseEntity.ok(sessoes);
-    }
+  @GetMapping("/status/{status}")
+  public ResponseEntity<List<Sessao>> obterSessoesPorStatus(@PathVariable String status) {
+    Status statusEnum = Status.valueOf(status.toUpperCase());
+    List<Sessao> sessoes = sessaoService.getSessoesByStatus(statusEnum);
+    return ResponseEntity.ok(sessoes);
+  }
 
     @GetMapping("/dataHoraInicial/{dataHoraInicial}")
     public ResponseEntity<List<Sessao>> obterSessoesPorDataHoraInicial(@PathVariable String dataHoraInicial) {
