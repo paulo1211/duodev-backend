@@ -1,5 +1,6 @@
 package com.duodev.duodevbackend.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,4 +47,10 @@ public class UsuarioController {
         usuarioService.deleteUsuario(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/register")
+    public Usuario registerUser(@Valid @RequestBody Usuario usuario) {
+        return usuarioService.createUsuario(usuario);
+    }
+
 }
