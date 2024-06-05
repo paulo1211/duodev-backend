@@ -151,13 +151,10 @@ public class SessaoService {
             novaSessao.setStatus(Status.AGENDADO);
             novaSessao.setLinkMeet(createdEvent.getHangoutLink());
             novaSessao.setEventGoogleCalendarId(createdEvent.getId());
-            novaSessao.setCalendarId(createdEvent.getId());
             sessaoRepository.save(novaSessao);
 
 
-            retorno = createdEvent.getHtmlLink() + " " + createdEvent.getHangoutLink() + " " + createdEvent.getId()
-            + " " + createdEvent.getConferenceData().getConferenceId() + " " + createdEvent.getConferenceData()
-                    .getEntryPoints().get(0).getEntryPointType();
+            retorno =  createdEvent.getHangoutLink();
             return retorno;
         }
 
