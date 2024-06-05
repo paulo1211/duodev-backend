@@ -13,9 +13,6 @@ import java.util.List;
 public interface SessaoRepository extends JpaRepository<Sessao, Integer> {
 
 
-    @Query(value = "SELECT * FROM sessao", nativeQuery = true)
-    List<Sessao> findAll();
-
     List<Sessao> findByDataHoraFinal(LocalDateTime dataHoraFinal);
     List<Sessao> findByDataHoraInicial(LocalDateTime dataHoraInicial);
     List<Sessao> findByDataHoraInicialBetween(LocalDateTime dataHoraInicial, LocalDateTime dataHoraFinal);

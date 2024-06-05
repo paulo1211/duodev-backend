@@ -28,11 +28,6 @@ public class SessaoController {
     return ResponseEntity.status(HttpStatus.CREATED).body(sessaoCriada);
   }
 
-  @GetMapping
-  public ResponseEntity<List<Sessao>> listarSessoes() throws IOException {
-
-    return ResponseEntity.ok(sessaoService.getAllSessoes());
-  }
 
   @GetMapping("/{id}")
   public ResponseEntity<Sessao> obterSessao(@PathVariable Integer id) {

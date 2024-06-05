@@ -2,6 +2,7 @@ package com.duodev.duodevbackend.service;
 
 import com.duodev.duodevbackend.enums.Status;
 import com.duodev.duodevbackend.exceptions.ResourceNotFoundException;
+import com.duodev.duodevbackend.model.Mentoria;
 import com.duodev.duodevbackend.model.Sessao;
 import com.duodev.duodevbackend.repository.SessaoRepository;
 import com.google.api.client.auth.oauth2.Credential;
@@ -163,91 +164,9 @@ public class SessaoService {
     }
 
 
-    public List<Sessao> getAllSessoes() throws IOException {
-        return sessaoRepository.findAll();
-    }
-
-
     // tem que ver se deve estourar uma exceção mesmo
     public Sessao getSessaoById(int id) {
         return sessaoRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Sessão não encontrada"));
-    }
-
-    public String updateSessao(int idSessao, Sessao sessaoAtualizada) throws IOException {
-
-        Sessao sessaoAtual = getSessaoById(idSessao);
-        String eventId = sessaoAtual.getEventGoogleCalendarId();
-
-        //transform object in string
-        System.out.println("SESSÃO" + sessaoAtualizada);
-
-        String retorno = "";
-        // Verifica se a sessão tem um ID de evento válido
-        if (eventId == null || eventId.isEmpty()) {
-            retorno = "ID do evento inválido.";
-            return retorno;
-        }
-
-        // Verifica se a sessão existe
-        if (!sessaoRepository.existsById(sessaoAtual.getId())) {
-            retorno = "Sessão não encontrada.";
-            return retorno;
-        } else if (sessaoAtual.getDataHoraInicial().isAfter(sessaoAtual.getDataHoraFinal())) {
-            retorno = "A data de inicío não pode ser posterior que a data final.";
-            return retorno;
-        } else if (sessaoAtual.getDataHoraInicial().isBefore(java.time.LocalDateTime.now())) {
-            retorno = "A data de inicío não pode ser anterior que a data atual.";
-            return retorno;
-        } else {
-            sessaoAtual.setDataHoraInicial(sessaoAtualizada.getDataHoraInicial());
-            sessaoAtual.setDataHoraFinal(sessaoAtualizada.getDataHoraFinal());
-            sessaoAtual.setMentoria(sessaoAtualizada.getMentoria());
-            sessaoAtual.setStatus(sessaoAtualizada.getStatus());
-            sessaoAtual.setMentoria(sessaoAtualizada.getMentoria());
-
-
-            Calendar service = getCalendarService();
-            // Recupera o evento existente
-            Event event = service.events().get("primary", eventId).execute();
-
-            // Atualiza os detalhes do evento conforme necessário
-            event.setSummary("DuoDev Mentoria Atualizada")
-                    .setDescription("Descrição atualizada do encontro");
-
-            // Atualiza a data e hora de início e fim, se necessário
-            String dataHoraInicialCalendar = sessaoAtualizada.getDataHoraInicial().toString() + ":00-03:00";
-            DateTime startDateTime = new DateTime(dataHoraInicialCalendar);
-            EventDateTime start = new EventDateTime()
-                    .setDateTime(startDateTime)
-                    .setTimeZone("America/Sao_Paulo");
-            event.setStart(start);
-
-            String dataHoraFinalCalendar = sessaoAtualizada.getDataHoraFinal().toString() + ":00-03:00";
-            DateTime endDateTime = new DateTime(dataHoraFinalCalendar);
-            EventDateTime end = new EventDateTime()
-                    .setDateTime(endDateTime)
-                    .setTimeZone("America/Sao_Paulo");
-            event.setEnd(end);
-
-
-            // Envia a atualização para o Google Calendar
-            Event updatedEvent = service.events().update("primary", eventId, event).setConferenceDataVersion(1)
-                    .execute();
-
-
-            // Atualiza a sessão com os novos detalhes
-            sessaoAtualizada.setDataHoraFinal(LocalDateTime.parse(sessaoAtualizada.getDataHoraFinal().toString()));
-            sessaoAtualizada.setDataHoraInicial(LocalDateTime.parse(sessaoAtualizada.getDataHoraInicial().toString()));
-            sessaoAtualizada.setEventGoogleCalendarId(sessaoAtual.getEventGoogleCalendarId());
-            sessaoAtualizada.setLinkMeet(sessaoAtual.getLinkMeet());
-
-
-            sessaoRepository.save(sessaoAtualizada);
-            retorno = updatedEvent.getHtmlLink() + " " + updatedEvent.getHangoutLink() + " " + updatedEvent.getId();
-
-        }
-
-        return retorno;
     }
 
 
@@ -265,38 +184,29 @@ public class SessaoService {
         sessaoRepository.save(sessao);
 
     }
+
+    public List<Sessao> findByDataHoraInicial(LocalDateTime dataHoraInicial) {
+        return sessaoRepository.findByDataHoraInicial(dataHoraInicial);
+    }
+
+    public List<Sessao> findByDataHoraFinal(LocalDateTime dataHoraFinal) {
+        return sessaoRepository.findByDataHoraFinal(dataHoraFinal);
+    }
+
+    public List<Sessao> findByDataHoraInicialBetween(LocalDateTime dataHoraInicial, LocalDateTime dataHoraFinal) {
+        return sessaoRepository.findByDataHoraInicialBetween(dataHoraInicial, dataHoraFinal);
+    }
+
+    public List<Sessao> findByMentoria(Mentoria mentoria) {
+        return sessaoRepository.findByMentoria(mentoria);
+    }
+
+    public List<Sessao> findByStatus(String status) {
+        return sessaoRepository.findByStatus(status);
+    }
+
+
+
 }
 
 
-
-//    public Sessao updateSessao(int id, Sessao sessaoDetails) throws IOException {
-//
-//        Calendar service = getCalendarService();
-//        com.google.api.services.calendar.model.Calendar calendar =
-//                service.calendars().get("primary").execute();
-//
-//
-//
-//        // formato da data 2024-06-03T09:00:00-03:00
-//        String dataHoraInicial = sessaoDetails.getDataHoraInicial().toString() + ":00-03:00";
-//
-//
-//
-//        com.google.api.services.calendar.model.Calendar updatedCalendar =
-//                service.calendars().update(calendar.getId(), calendar).execute();
-//
-//
-//
-//
-//
-//
-//
-//        Sessao sessao = getSessaoById(id);
-//        sessao.setDataHoraInicial(sessaoDetails.getDataHoraInicial());
-//        sessao.setDataHoraFinal(sessaoDetails.getDataHoraFinal());
-//        sessao.setStatus(sessaoDetails.getStatus());
-//        sessao.setMentoria(sessaoDetails.getMentoria());
-//
-//        return sessaoRepository.save(sessao);
-//    }
-//
