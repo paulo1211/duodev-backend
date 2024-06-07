@@ -36,4 +36,19 @@ public class Sessao {
     private String linkMeet;
     private String eventGoogleCalendarId;
 
+    private String invite;
+
+    @Override
+    public String toString() {
+        return "Sessao{" +
+                "id=" + id +
+                ", mentoria=" + mentoria +
+                ", dataHoraInicial=" + dataHoraInicial +
+                ", dataHoraFinal=" + dataHoraFinal +
+                ", status=" + status +
+                ", linkMeet='" + linkMeet + '\'' +
+                ", eventGoogleCalendarId='" + eventGoogleCalendarId + '\'' +
+                ", invite='" + invite + '\'' +
+                '}';
+    }
 }

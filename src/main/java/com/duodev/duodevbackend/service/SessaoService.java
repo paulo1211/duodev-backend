@@ -2,8 +2,10 @@ package com.duodev.duodevbackend.service;
 
 import com.duodev.duodevbackend.enums.Status;
 import com.duodev.duodevbackend.exceptions.ResourceNotFoundException;
+import com.duodev.duodevbackend.model.Email;
 import com.duodev.duodevbackend.model.Mentoria;
 import com.duodev.duodevbackend.model.Sessao;
+import com.duodev.duodevbackend.model.Usuario;
 import com.duodev.duodevbackend.repository.SessaoRepository;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
@@ -14,12 +16,14 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.DateTime;
+import com.google.api.client.util.Value;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.calendar.model.*;
 import com.google.api.services.calendar.model.Event;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.web.servlet.ServletWebServerFactoryAutoConfiguration;
 import org.springframework.stereotype.Service;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -29,13 +33,29 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 
 @Service
 public class SessaoService {
 
+    @Value("${diretorio.relatorio.pdf}")
+    private String diretorioRelatorioPdf;
+
+    @Value("${application.url}")
+    private String APPLICATION_URL;
+
     @Autowired
     private SessaoRepository sessaoRepository;
+
+    @Autowired
+    private MentoriaService mentoriaService;
+
+    @Autowired
+    private EmailService emailService;
+
+    @Autowired
+    private UsuarioService usuarioService;
 
     /**
      * Application name.
@@ -57,6 +77,8 @@ public class SessaoService {
     private static final List<String> SCOPES =
             Collections.singletonList(CalendarScopes.CALENDAR);
     private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
+    @Autowired
+    private ServletWebServerFactoryAutoConfiguration servletWebServerFactoryAutoConfiguration;
 
     /**
      * Creates an authorized Credential object.
@@ -95,7 +117,7 @@ public class SessaoService {
 
     }
 
-    public String createSessao(Sessao novaSessao, String emailMentorado, String emailMentor) throws IOException {
+    public String createSessao(Sessao novaSessao, String emailMentor, String emailMentorado) throws IOException {
         String retorno = "";
         if (novaSessao.getDataHoraInicial().isAfter(novaSessao.getDataHoraFinal())) {
             retorno = "A data de inicío não pode ser posterior que a data final.";
@@ -104,61 +126,119 @@ public class SessaoService {
             retorno = "A data de inicío não pode ser anterior que a data atual.";
             return retorno;
         } else {
-            Calendar service = getCalendarService();
-            com.google.api.services.calendar.model.Event event = new com.google.api.services.calendar.model.Event()
-                    .setSummary("DuoDev Mentoria")
-                    .setLocation("Google Meet")
-                    .setDescription("Encontro criado por DuoDev para a mentoria");
-
-
-            // formato da data 2024-06-03T09:00:00-03:00
-            String dataHoraInicial = novaSessao.getDataHoraInicial().toString() + ":00-03:00";
-
-            DateTime startDateTime = new DateTime(dataHoraInicial);
-            EventDateTime start = new EventDateTime()
-                    .setDateTime(startDateTime)
-                    .setTimeZone("America/Sao_Paulo");
-            event.setStart(start);
-
-            // formato da data 2024-06-03T09:00:00-03:00
-            String dataHoraFinal = novaSessao.getDataHoraFinal().toString() + ":00-03:00";
-            DateTime endDateTime = new DateTime(dataHoraFinal);
-            EventDateTime end = new EventDateTime()
-                    .setDateTime(endDateTime)
-                    .setTimeZone("America/Sao_Paulo");
-            event.setEnd(end);
-
-            EventAttendee[] attendees = new EventAttendee[]{
-                    new EventAttendee().setEmail(emailMentor),
-                    new EventAttendee().setEmail(emailMentorado),
-            };
-
-            event.setAttendees(Arrays.asList(attendees));
-            String calendarId = "primary";
-            // cria a reunião no meet
-
-            ConferenceSolutionKey conferenceSolutionKey = new ConferenceSolutionKey();
-            conferenceSolutionKey.setType("hangoutsMeet");
-            CreateConferenceRequest createConferenceRequest = new CreateConferenceRequest();
-            createConferenceRequest.setRequestId("sample-request-id");
-
-            ConferenceData conferenceData = new ConferenceData();
-            conferenceData.setCreateRequest(createConferenceRequest);
-            event.setConferenceData(conferenceData);
-            Event createdEvent = service.events().insert(calendarId, event).setConferenceDataVersion(1).execute();
-
-
-            novaSessao.setStatus(Status.AGENDADO);
-            novaSessao.setLinkMeet(createdEvent.getHangoutLink());
-            novaSessao.setEventGoogleCalendarId(createdEvent.getId());
+            novaSessao.setStatus(Status.PENDENTE);
+            novaSessao.setLinkMeet("pendente");
+            novaSessao.setEventGoogleCalendarId("pendente");
+            novaSessao.setInvite(createInviteId());
+            novaSessao.setMentoria(null);
             sessaoRepository.save(novaSessao);
 
-
-            retorno =  createdEvent.getHangoutLink();
+            sendInviteInEmail(emailMentor, novaSessao, emailMentorado);
+            retorno = "Sessão criada com sucesso!";
             return retorno;
         }
 
     }
+
+
+    public String sendInviteInEmail(String emailMentor, Sessao sessao, String emailMentorado) {
+        Email email = new Email();
+        email.setSendDate(LocalDateTime.now());
+        String mensagem = "Olá, você foi convidado para uma mentoria no DuoDev com " + emailMentorado +
+                " na data: " + sessao.getDataHoraInicial() + " até às: " + sessao.getDataHoraFinal()
+                + " acesse o link para aceitar o convite: " + APPLICATION_URL + ":8080/sessao/aceitar/"
+                + sessao.getInvite();
+
+        email.setBody(mensagem);
+        email.setSendFrom("duodev7@gmail.com");
+        email.setSubject("Convite para mentoria DuoDev");
+        email.setRequestedBy(emailMentorado);
+        email.setSendTo(emailMentor);
+        email.setInviteId(sessao.getInvite());
+
+        return emailService.sendEmailInvite(email, sessao);
+    }
+
+
+
+
+    public String createMeetSession(Sessao novaSessao, String emailMentorado, String emailMentor,
+                                    String inviteId) throws IOException {
+
+        String retorno = "";
+        Calendar service = getCalendarService();
+        com.google.api.services.calendar.model.Event event = new com.google.api.services.calendar.model.Event()
+                .setSummary("DuoDev Mentoria")
+                .setLocation("Google Meet")
+                .setDescription("Encontro criado por DuoDev para a mentoria");
+
+
+        // formato da data 2024-06-03T09:00:00-03:00
+        String dataHoraInicial = novaSessao.getDataHoraInicial().toString() + ":00-03:00";
+
+        DateTime startDateTime = new DateTime(dataHoraInicial);
+        EventDateTime start = new EventDateTime()
+                .setDateTime(startDateTime)
+                .setTimeZone("America/Sao_Paulo");
+        event.setStart(start);
+
+        // formato da data 2024-06-03T09:00:00-03:00
+        String dataHoraFinal = novaSessao.getDataHoraFinal().toString() + ":00-03:00";
+        DateTime endDateTime = new DateTime(dataHoraFinal);
+        EventDateTime end = new EventDateTime()
+                .setDateTime(endDateTime)
+                .setTimeZone("America/Sao_Paulo");
+        event.setEnd(end);
+
+        EventAttendee[] attendees = new EventAttendee[]{
+                new EventAttendee().setEmail(emailMentor),
+                new EventAttendee().setEmail(emailMentorado),
+        };
+
+        event.setAttendees(Arrays.asList(attendees));
+        String calendarId = "primary";
+        // cria a reunião no meet
+
+        ConferenceSolutionKey conferenceSolutionKey = new ConferenceSolutionKey();
+        conferenceSolutionKey.setType("hangoutsMeet");
+        CreateConferenceRequest createConferenceRequest = new CreateConferenceRequest();
+        createConferenceRequest.setRequestId("sample-request-id");
+
+        ConferenceData conferenceData = new ConferenceData();
+        conferenceData.setCreateRequest(createConferenceRequest);
+        event.setConferenceData(conferenceData);
+        Event createdEvent = service.events().insert(calendarId, event).setConferenceDataVersion(1).execute();
+
+        novaSessao.setStatus(Status.AGENDADO);
+        novaSessao.setLinkMeet(createdEvent.getHangoutLink());
+        novaSessao.setEventGoogleCalendarId(createdEvent.getId());
+        sessaoRepository.save(novaSessao);
+
+        retorno =  createdEvent.getHangoutLink();
+        return retorno;
+    }
+
+    public String createInviteId(){
+        return UUID.randomUUID().toString();
+    }
+
+    public Boolean validateInvite(String inviteId) throws IOException {
+        Sessao sessao = sessaoRepository.findByInvite(inviteId);
+        Email email = emailService.getEmailByInviteId(inviteId);
+        Usuario mentor = usuarioService.getUsuarioByEmail(email.getSendTo());
+        Usuario mentorado = usuarioService.getUsuarioByEmail(email.getRequestedBy());
+
+        if (sessao == null || sessao.getStatus() != Status.PENDENTE) {
+            return false;
+        } else  {
+            createMeetSession(sessao,mentorado.getEmail(), mentor.getEmail(), inviteId);
+            return true;
+        }
+    }
+
+
+
+
 
 
     // tem que ver se deve estourar uma exceção mesmo
@@ -202,8 +282,24 @@ public class SessaoService {
         return sessaoRepository.findByStatus(status);
     }
 
+    public String acceptSessao(String inviteId) throws IOException {
+
+        boolean validInvite = validateInvite(inviteId);
+
+        if (validInvite){
+            Sessao sessao = sessaoRepository.findByInvite(inviteId);
+            sessao.setStatus(Status.AGENDADO);
+            sessaoRepository.save(sessao);
+            return "Sessão aceita com sucesso!";
+
+        } else {
+            return "Sessão não encontrada ou já foi aceita.";
+        }
 
 
+
+
+    }
 }
 
 

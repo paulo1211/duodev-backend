@@ -54,5 +54,17 @@ public class Usuario {
 
     public Usuario() {
         //TODO Auto-generated constructor stub
-    }    
+    }
+
+    @Override
+    public String toString() {
+        return "Usuario{" +
+                "id=" + id +
+                ", nome='" + nome + '\'' +
+                ", cpf='" + cpf + '\'' +
+                ", email='" + email + '\'' +
+                ", senha='" + senha + '\'' +
+                ", sexo=" + sexo +
+                '}';
+    }
 }
