@@ -289,13 +289,9 @@ public class SessaoService {
             sessao.setStatus(Status.AGENDADO);
             sessaoRepository.save(sessao);
             return "Sessão aceita com sucesso!";
-
         } else {
             return "Sessão não encontrada ou já foi aceita.";
         }
-
-
-
 
     }
 }
