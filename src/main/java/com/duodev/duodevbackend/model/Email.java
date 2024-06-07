@@ -43,19 +43,4 @@ public class Email {
     private String inviteId;
 
 
-    @Override
-    public String toString() {
-        return "Email{" +
-                "id=" + id +
-                ", sendTo='" + sendTo + '\'' +
-                ", sendFrom='" + sendFrom + '\'' +
-                ", requestedBy='" + requestedBy + '\'' +
-                ", subject='" + subject + '\'' +
-                ", body='" + body + '\'' +
-                ", sendDate=" + sendDate +
-                ", usuario=" + usuario +
-                ", sessao=" + sessao +
-                ", inviteId='" + inviteId + '\'' +
-                '}';
-    }
 }

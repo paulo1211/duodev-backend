@@ -44,17 +44,4 @@ public class Mentoria {
     @Schema(description = "Pontuação do mentorado", example = "8")
     private int pontuacaoMentorado;
 
-
-    @Override
-    public String toString() {
-        return "Mentoria{" +
-                "id=" + id +
-                ", usuarioMentorado=" + usuarioMentorado +
-                ", usuarioMentor=" + usuarioMentor +
-                ", dataInicial=" + dataInicial +
-                ", dataFinal=" + dataFinal +
-                ", pontuacaoMentor=" + pontuacaoMentor +
-                ", pontuacaoMentorado=" + pontuacaoMentorado +
-                '}';
-    }
 }

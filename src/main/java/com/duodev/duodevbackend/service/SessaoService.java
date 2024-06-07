@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -38,9 +39,6 @@ import java.util.UUID;
 
 @Service
 public class SessaoService {
-
-    @Value("${diretorio.relatorio.pdf}")
-    private String diretorioRelatorioPdf;
 
     @Value("${application.url}")
     private String APPLICATION_URL;
@@ -144,10 +142,17 @@ public class SessaoService {
     public String sendInviteInEmail(String emailMentor, Sessao sessao, String emailMentorado) {
         Email email = new Email();
         email.setSendDate(LocalDateTime.now());
+        String appUrl= "http://localhost";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+        String inicioSessaoFormatado = formatter.format(sessao.getDataHoraInicial());
+        String fimSessaoFormatado    = formatter.format(sessao.getDataHoraFinal());
         String mensagem = "Olá, você foi convidado para uma mentoria no DuoDev com " + emailMentorado +
-                " na data: " + sessao.getDataHoraInicial() + " até às: " + sessao.getDataHoraFinal()
-                + " acesse o link para aceitar o convite: " + APPLICATION_URL + ":8080/sessao/aceitar/"
+                " na data: " + inicioSessaoFormatado + " até às: " + fimSessaoFormatado
+                + " acesse o link para aceitar o convite: " + appUrl + ":8080/sessao/aceitar/"
                 + sessao.getInvite();
+
+
 
         email.setBody(mensagem);
         email.setSendFrom("duodev7@gmail.com");
@@ -158,8 +163,6 @@ public class SessaoService {
 
         return emailService.sendEmailInvite(email, sessao);
     }
-
-
 
 
     public String createMeetSession(Sessao novaSessao, String emailMentorado, String emailMentor,
@@ -237,15 +240,10 @@ public class SessaoService {
     }
 
 
-
-
-
-
     // tem que ver se deve estourar uma exceção mesmo
     public Sessao getSessaoById(int id) {
         return sessaoRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Sessão não encontrada"));
     }
-
 
     public void deleteSessao(Integer id) {
         Sessao sessao = getSessaoById(id);
