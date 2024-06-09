@@ -43,8 +43,4 @@ public class UsuarioService {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'autenticarUsuario'");
     }
-
-    public Usuario getUsuarioByEmail(String email) {
-        return usuarioRepository.findByEmail(email);
-    }
 }
