@@ -39,6 +39,11 @@ public class UsuarioService {
         usuarioRepository.deleteById(id);
     }
 
+
+    public Usuario getUsuarioByEmail(String email) {
+        return usuarioRepository.findByEmail(email);
+    }
+
     public boolean autenticarUsuario(String username, String password) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'autenticarUsuario'");
