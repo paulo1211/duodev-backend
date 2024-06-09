@@ -43,4 +43,5 @@ public class Mentoria {
 
     @Schema(description = "Pontuação do mentorado", example = "8")
     private int pontuacaoMentorado;
+
 }

@@ -36,4 +36,6 @@ public class Sessao {
     private String linkMeet;
     private String eventGoogleCalendarId;
 
+    private String invite;
+
 }

@@ -22,4 +22,6 @@ public interface SessaoRepository extends JpaRepository<Sessao, Integer> {
 
     List<Sessao> findByStatus(Status status);
 
+    @Query("SELECT s FROM Sessao s WHERE s.invite = ?1")
+    Sessao findByInvite(String inviteId);
 }

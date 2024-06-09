@@ -2,7 +2,9 @@ package com.duodev.duodevbackend.controller;
 
 import com.duodev.duodevbackend.dto.SessaoDto;
 import com.duodev.duodevbackend.enums.Status;
+import com.duodev.duodevbackend.model.Email;
 import com.duodev.duodevbackend.model.Mentoria;
+import com.duodev.duodevbackend.model.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,11 +25,12 @@ public class SessaoController {
   @Autowired
   private SessaoService sessaoService;
 
-  @PostMapping
-  public ResponseEntity<String> adicionarSessao(@RequestBody SessaoDto sessaoDto)
+
+  @PostMapping()
+  public ResponseEntity<String> adicionarSessao(@RequestBody SessaoDto sessaoDto, @RequestParam String emailMentor,
+                                                @RequestParam String emailMentorado)
           throws Exception {
-    String sessaoCriada = sessaoService.createSessao(sessaoDto.sessao(), sessaoDto.emailMentor(),
-            sessaoDto.emailMentorado());
+    String sessaoCriada = sessaoService.createSessao(sessaoDto.sessao(),emailMentor, emailMentorado);
     return ResponseEntity.status(HttpStatus.CREATED).body(sessaoCriada);
   }
 
@@ -79,6 +82,20 @@ public class SessaoController {
         List<Sessao> sessoes = sessaoService.findByDataHoraInicialBetween(LocalDateTime.parse(dataHoraInicial),
                 LocalDateTime.parse(dataHoraFinal));
         return ResponseEntity.ok(sessoes);
+    }
+
+
+    @PostMapping("/email")
+    public ResponseEntity<String> enviarEmail(@RequestBody String emailMentor, @RequestBody Sessao sessao,
+                                              @RequestBody String emailMentorado) throws IOException{
+        String emailEnviado = sessaoService.sendInviteInEmail(emailMentor, sessao, emailMentorado);
+        return ResponseEntity.ok(emailEnviado);
+    }
+
+    @GetMapping("/aceitar/{inviteId}")
+    public ResponseEntity<String> aceitarSessao(@PathVariable String inviteId) throws IOException {
+        String sessaoAceita = sessaoService.acceptSessao(inviteId);
+        return ResponseEntity.ok(sessaoAceita);
     }
 
 }
