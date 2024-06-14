@@ -36,7 +36,7 @@ public class Usuario {
     private String email;
 
     @NotNull(message = "A senha deve ser informada")
-    @Size(min = 3, message = "A senha deve ter no mínimo 3 caracteres")
+    @Size(min = 6, message = "A senha deve ter no mínimo 6 caracteres")
     private String senha;
 
     @NotNull
