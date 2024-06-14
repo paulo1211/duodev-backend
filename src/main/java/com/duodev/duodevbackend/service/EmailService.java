@@ -92,6 +92,34 @@ public class EmailService  {
 
     }
 
+    public void sendTokenEmail(String emailAddress, String token) {
+        String username = "duodev7@gmail.com";
+        String password = "qcrq xwad hwlt gthr";
+        String host = "smtp.gmail.com";
+        String port = "587";
+        Properties properties = new Properties();
+        properties.put("mail.smtp.auth", "true");
+        properties.put("mail.smtp.starttls.enable", "true");
+        properties.put("mail.smtp.host", host);
+        properties.put("mail.smtp.port", port);
+
+        Session session = Session.getInstance(properties, new Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(username, password);
+            }
+        });
+
+        try {
+            Message message = new MimeMessage(session);
+            message.setFrom(new InternetAddress(username));
+            message.setRecipient(Message.RecipientType.TO, new InternetAddress(emailAddress));
+            message.setSubject("Seu Token de Acesso");
+            message.setText("Seu token de acesso é: " + token);
+            Transport.send(message);
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public Email getEmailByInviteId(String inviteId) {
         return emailRepository.findByInviteId(inviteId);
