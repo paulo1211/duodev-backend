@@ -11,6 +11,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.validator.constraints.br.CPF;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "usuario")
 @Getter
@@ -41,5 +43,8 @@ public class Usuario {
 
     @NotNull
     private Sexo sexo;
+
+    @NotNull
+    private LocalDate dataNascimento;
 
 }
