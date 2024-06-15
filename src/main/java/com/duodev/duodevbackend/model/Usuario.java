@@ -42,17 +42,4 @@ public class Usuario {
     @NotNull
     private Sexo sexo;
 
-    public Usuario(int id, @NotNull String nome, @NotNull @CPF String cpf, @NotNull @Email String email,
-            @NotNull String senha, @NotNull Sexo sexo) {
-        this.id = id;
-        this.nome = nome;
-        this.cpf = cpf;
-        this.email = email;
-        this.senha = senha;
-        this.sexo = sexo;
-    }
-
-    public Usuario() {
-        //TODO Auto-generated constructor stub
-    }    
 }

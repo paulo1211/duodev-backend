@@ -33,4 +33,9 @@ public class Sessao {
     @NotNull
     private Status status;
 
+    private String linkMeet;
+    private String eventGoogleCalendarId;
+
+    private String invite;
+
 }

@@ -1,5 +1,8 @@
 package com.duodev.duodevbackend.controller;
 
+import com.duodev.duodevbackend.model.UsuarioCompetencia;
+import com.duodev.duodevbackend.service.UsuarioCompetenciaService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +19,9 @@ public class UsuarioController {
 
     @Autowired
     private UsuarioService usuarioService;
+
+    @Autowired
+    private UsuarioCompetenciaService usuarioCompetenciaService;
 
     @PostMapping
     public ResponseEntity<Usuario> adicionarUsuario(@RequestBody Usuario usuario) {
@@ -45,5 +51,18 @@ public class UsuarioController {
     public ResponseEntity<Void> deletarUsuario(@PathVariable Integer id) {
         usuarioService.deleteUsuario(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/register")
+    public Usuario registerUser(@Valid @RequestBody Usuario usuario) {
+        return usuarioService.createUsuario(usuario);
+    }
+
+    @GetMapping("/competencia/{id}")
+    public ResponseEntity<List<UsuarioCompetencia>> getUsuariosByCompetenciaId(
+            @PathVariable("id") int competenciaId,
+            @RequestParam(value = "anosExpMin", required = false) Integer anosExpMin) {
+        List<UsuarioCompetencia> usuarios = usuarioCompetenciaService.findUsuariosByCompetenciaId(competenciaId, anosExpMin);
+        return ResponseEntity.ok(usuarios);
     }
 }
