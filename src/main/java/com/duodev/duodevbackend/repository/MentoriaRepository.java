@@ -1,13 +1,12 @@
 package com.duodev.duodevbackend.repository;
 
 import com.duodev.duodevbackend.model.Mentoria;
+import com.duodev.duodevbackend.model.Usuario;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-
 public interface MentoriaRepository extends JpaRepository<Mentoria, Integer> {
-    List<Mentoria> findByIdUsuarioMentor(Integer idUsuarioMentor);
-
-    List<Mentoria> findByIdUsuarioMentorado(int id);
+    List<Mentoria> findByUsuarioMentor(Usuario usuarioMentor);
+    List<Mentoria> findByUsuarioMentorado(Usuario usuarioMentorado);
 }

@@ -24,7 +24,7 @@ public class RankingService {
 
         Map<Usuario, Double> usuarioPontuacaoMap = new HashMap<>();
         for (Usuario usuario : usuarios) {
-            List<Mentoria> mentorias = mentoriaRepository.findByIdUsuarioMentor(usuario.getId());
+            List<Mentoria> mentorias = mentoriaRepository.findByUsuarioMentor(usuario);
             double media = mentorias.stream().mapToDouble(Mentoria::getPontuacaoMentor).average().orElse(0.0);
             usuarioPontuacaoMap.put(usuario, media);
         }
@@ -40,7 +40,7 @@ public class RankingService {
 
         Map<Usuario, Double> usuarioPontuacaoMap = new HashMap<>();
         for (Usuario usuario : usuarios) {
-            List<Mentoria> mentorias = mentoriaRepository.findByIdUsuarioMentorado(usuario.getId());
+            List<Mentoria> mentorias = mentoriaRepository.findByUsuarioMentorado(usuario);
             double media = mentorias.stream().mapToDouble(Mentoria::getPontuacaoMentorado).average().orElse(0.0);
             usuarioPontuacaoMap.put(usuario, media);
         }
