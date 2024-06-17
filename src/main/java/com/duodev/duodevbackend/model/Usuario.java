@@ -11,6 +11,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.validator.constraints.br.CPF;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "usuario")
 @Getter
@@ -36,10 +38,13 @@ public class Usuario {
     private String email;
 
     @NotNull(message = "A senha deve ser informada")
-    @Size(min = 3, message = "A senha deve ter no mínimo 3 caracteres")
+    @Size(min = 6, message = "A senha deve ter no mínimo 6 caracteres")
     private String senha;
 
     @NotNull
     private Sexo sexo;
+
+    @NotNull
+    private LocalDate dataNascimento;
 
 }
