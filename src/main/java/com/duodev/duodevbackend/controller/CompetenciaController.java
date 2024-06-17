@@ -1,5 +1,7 @@
 package com.duodev.duodevbackend.controller;
 
+import com.duodev.duodevbackend.model.UsuarioCompetencia;
+import com.duodev.duodevbackend.service.UsuarioCompetenciaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +15,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/competencia")
 public class CompetenciaController {
+
+  @Autowired
+  private UsuarioCompetenciaService usuarioCompetenciaService;
 
   @Autowired
   private CompetenciaService competenciaService;
@@ -45,5 +50,11 @@ public class CompetenciaController {
   public ResponseEntity<Void> deletarCompetencia(@PathVariable Integer id) {
     competenciaService.deleteCompetencia(id);
     return ResponseEntity.noContent().build();
+  }
+
+  @GetMapping("/usuario/{idUsuario}")
+  public ResponseEntity<List<UsuarioCompetencia>> getCompetenciaByUsuarioId(@PathVariable("idUsuario") int usuarioId) {
+    List<UsuarioCompetencia> usuarios = usuarioCompetenciaService.findCompetenciasByUsuarioId(usuarioId);
+    return ResponseEntity.ok(usuarios);
   }
 }

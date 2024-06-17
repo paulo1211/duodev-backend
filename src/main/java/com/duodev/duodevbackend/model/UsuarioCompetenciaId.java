@@ -10,4 +10,12 @@ public class UsuarioCompetenciaId implements Serializable {
 
     @Column(name = "id_competencia")
     private int idCompetencia;
+
+    public UsuarioCompetenciaId(int idUsuario, int idCompetencia) {
+        this.idUsuario = idUsuario;
+        this.idCompetencia = idCompetencia;
+    }
+
+    public UsuarioCompetenciaId() {
+    }
 }
