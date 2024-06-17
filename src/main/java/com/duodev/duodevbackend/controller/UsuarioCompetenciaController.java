@@ -3,8 +3,11 @@ package com.duodev.duodevbackend.controller;
 import com.duodev.duodevbackend.model.UsuarioCompetencia;
 import com.duodev.duodevbackend.service.UsuarioCompetenciaService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.duodev.duodevbackend.dto.UsuarioCompetenciaDto;
+import com.duodev.duodevbackend.dto.UsuarioCompetenciaIdDto;
 
 import java.util.List;
 
@@ -15,21 +18,50 @@ public class UsuarioCompetenciaController {
     @Autowired
     private UsuarioCompetenciaService usuarioCompetenciaService;
 
-    @PostMapping("/{usuarioId}/competencia/{competenciaId}")
-    public ResponseEntity<UsuarioCompetencia> addCompetenciaToUsuario(@PathVariable int usuarioId, @PathVariable int competenciaId) {
-        UsuarioCompetencia usuarioCompetencia = usuarioCompetenciaService.addCompetenciaToUsuario(usuarioId, competenciaId);
-        return ResponseEntity.ok(usuarioCompetencia);
+    @PostMapping("/single")
+    public ResponseEntity<UsuarioCompetencia> addCompetenciaToUsuario(
+            @RequestBody UsuarioCompetenciaDto usuarioCompetenciaDto) {
+
+        UsuarioCompetencia usuarioCompetencia = usuarioCompetenciaService.addCompetenciaToUsuario(
+                usuarioCompetenciaDto.getUsuarioId(),
+                usuarioCompetenciaDto.getCompetenciaId(),
+                usuarioCompetenciaDto.getAnosExperiencia());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(usuarioCompetencia);
     }
 
-    @PostMapping("/{usuarioId}/competencias")
-    public ResponseEntity<List<UsuarioCompetencia>> addCompetenciasToUsuario(@PathVariable int usuarioId, @RequestBody List<Integer> competenciaIds) {
-        List<UsuarioCompetencia> usuarioCompetencias = usuarioCompetenciaService.addCompetenciasToUsuario(usuarioId, competenciaIds);
-        return ResponseEntity.ok(usuarioCompetencias);
+    @PostMapping("/multiple")
+    public ResponseEntity<List<UsuarioCompetencia>> addMultipleCompetenciasToUsuario(
+            @RequestBody List<UsuarioCompetenciaDto> competenciasDto) {
+
+        List<UsuarioCompetencia> usuarioCompetencias = usuarioCompetenciaService.addMultipleCompetenciasToUsuario(competenciasDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(usuarioCompetencias);
     }
 
-    @DeleteMapping("/{usuarioId}/competencia/{competenciaId}")
-    public ResponseEntity<Void> removeCompetenciaFromUsuario(@PathVariable int usuarioId, @PathVariable int competenciaId) {
-        usuarioCompetenciaService.removeCompetenciaFromUsuario(usuarioId, competenciaId);
+    @DeleteMapping("/single")
+    public ResponseEntity<Void> removeCompetenciaFromUsuario(@RequestBody UsuarioCompetenciaIdDto usuarioCompetenciaIdDto) {
+        usuarioCompetenciaService.removeCompetenciaFromUsuario(usuarioCompetenciaIdDto.getUsuarioId(), usuarioCompetenciaIdDto.getCompetenciaId());
         return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/multiple")
+    public ResponseEntity<Void> removeMultipleCompetenciasFromUsuario(@RequestBody List<UsuarioCompetenciaIdDto> competenciasIdDto) {
+        usuarioCompetenciaService.removeMultipleCompetenciasFromUsuario(competenciasIdDto);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/multiple")
+    public ResponseEntity<List<UsuarioCompetencia>> updateAnosExperienciaMultiple(
+            @RequestBody List<UsuarioCompetenciaDto> competenciasDto) {
+
+        List<UsuarioCompetencia> updatedCompetencias = usuarioCompetenciaService.updateAnosExperienciaMultiple(competenciasDto);
+        return ResponseEntity.ok(updatedCompetencias);
+    }
+
+    @PutMapping("/single")
+    public ResponseEntity<UsuarioCompetencia> updateAnosExperiencia(
+            @RequestBody UsuarioCompetenciaDto competenciaDto) {
+        UsuarioCompetencia updatedCompetencia = usuarioCompetenciaService.updateAnosExperiencia(competenciaDto);
+        return ResponseEntity.ok(updatedCompetencia);
     }
 }

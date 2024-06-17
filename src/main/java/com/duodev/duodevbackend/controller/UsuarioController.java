@@ -1,6 +1,8 @@
 package com.duodev.duodevbackend.controller;
 
+import com.duodev.duodevbackend.model.UsuarioAreaInteresse;
 import com.duodev.duodevbackend.model.UsuarioCompetencia;
+import com.duodev.duodevbackend.service.UsuarioAreaInteresseService;
 import com.duodev.duodevbackend.service.UsuarioCompetenciaService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +24,9 @@ public class UsuarioController {
 
     @Autowired
     private UsuarioCompetenciaService usuarioCompetenciaService;
+
+    @Autowired
+    private UsuarioAreaInteresseService usuarioAreaInteresseService;
 
     @PostMapping
     public ResponseEntity<Usuario> adicionarUsuario(@RequestBody Usuario usuario) {
@@ -58,11 +63,18 @@ public class UsuarioController {
         return usuarioService.createUsuario(usuario);
     }
 
-    @GetMapping("/competencia/{id}")
+    @GetMapping("/competencia/{idCompetencia}")
     public ResponseEntity<List<UsuarioCompetencia>> getUsuariosByCompetenciaId(
-            @PathVariable("id") int competenciaId,
+            @PathVariable("idCompetencia") int competenciaId,
             @RequestParam(value = "anosExpMin", required = false) Integer anosExpMin) {
         List<UsuarioCompetencia> usuarios = usuarioCompetenciaService.findUsuariosByCompetenciaId(competenciaId, anosExpMin);
+        return ResponseEntity.ok(usuarios);
+    }
+
+    @GetMapping("/areaInteresse/{idAreaInteresse}")
+    public ResponseEntity<List<UsuarioAreaInteresse>> getUsuariosByAreaInteresseId(
+            @PathVariable("idAreaInteresse") int competenciaId) {
+        List<UsuarioAreaInteresse> usuarios = usuarioAreaInteresseService.findUsuariosByAreaInteresseId(competenciaId);
         return ResponseEntity.ok(usuarios);
     }
 }
