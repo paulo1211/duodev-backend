@@ -30,8 +30,10 @@ public class UsuarioService {
         Usuario usuario = getUsuarioById(id);
         usuario.setNome(usuarioDetails.getNome());
         usuario.setEmail(usuarioDetails.getEmail());
+        usuario.setCpf(usuarioDetails.getCpf());
         usuario.setSenha(usuarioDetails.getSenha());
         usuario.setSexo(usuarioDetails.getSexo());
+        usuario.setDataNascimento(usuarioDetails.getDataNascimento());
         return usuarioRepository.save(usuario);
     }
 
