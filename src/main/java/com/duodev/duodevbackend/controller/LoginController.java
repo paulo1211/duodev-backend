@@ -1,10 +1,13 @@
 package com.duodev.duodevbackend.controller;
 
+import com.duodev.duodevbackend.model.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.duodev.duodevbackend.service.UsuarioService;
@@ -15,19 +18,17 @@ public class LoginController {
     @Autowired
     private UsuarioService usuarioService;
 
-    @GetMapping("/login")
-    public String loginForm() {
-        return "publica-login-usuario.html"; 
-    }
 
     @PostMapping("/login")
-    public String loginSubmit(Model model, @RequestParam String username, @RequestParam String password) {
-        if (usuarioService.autenticarUsuario(username, password)) {
-            // Se as credenciais estiverem corretas, redireciona para a página inicial
-            return "redirect:/";
+    public ResponseEntity<Object> loginSubmit(@RequestBody Usuario usuarioLogin) {
+        Usuario login = usuarioService.realizarLogin(usuarioLogin);
+        if (login != null) {
+            return ResponseEntity.ok().body(login);
         } else {
-            model.addAttribute("error", "Credenciais inválidas");
-            return "login"; // Retorna para a página de login com uma mensagem de erro
+            // return json with error message
+            return ResponseEntity.badRequest().body("Usuário ou senha inválidos");
         }
+
+
     }
 }

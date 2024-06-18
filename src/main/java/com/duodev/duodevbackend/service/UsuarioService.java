@@ -46,8 +46,18 @@ public class UsuarioService {
         return usuarioRepository.findByEmail(email);
     }
 
-    public boolean autenticarUsuario(String username, String password) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'autenticarUsuario'");
+    public Usuario realizarLogin(Usuario usuarioLogin) {
+        Usuario usuarioTestado = procuraUsuarioPorEmail(usuarioLogin.getEmail());
+        if (usuarioTestado != null) {
+            if (usuarioTestado.getSenha().equals(usuarioLogin.getSenha())) {
+                return usuarioTestado;
+            }
+        }
+        return null;
+    }
+
+
+    public Usuario procuraUsuarioPorEmail(String email) {
+        return usuarioRepository.findByEmail(email);
     }
 }
