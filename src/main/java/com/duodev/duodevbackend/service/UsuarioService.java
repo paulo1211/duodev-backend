@@ -60,4 +60,11 @@ public class UsuarioService {
     public Usuario procuraUsuarioPorEmail(String email) {
         return usuarioRepository.findByEmail(email);
     }
+
+    public void resetPassword(String senha, String email) {
+
+        Usuario usuario = usuarioRepository.findByEmail(email);
+        usuario.setSenha(senha);
+        usuarioRepository.save(usuario);
+    }
 }

@@ -1,5 +1,6 @@
 package com.duodev.duodevbackend.controller;
 
+import com.duodev.duodevbackend.dto.RecuperarSenhaDto;
 import com.duodev.duodevbackend.model.UsuarioAreaInteresse;
 import com.duodev.duodevbackend.model.UsuarioCompetencia;
 import com.duodev.duodevbackend.service.UsuarioAreaInteresseService;
@@ -77,4 +78,11 @@ public class UsuarioController {
         List<UsuarioAreaInteresse> usuarios = usuarioAreaInteresseService.findUsuariosByAreaInteresseId(competenciaId);
         return ResponseEntity.ok(usuarios);
     }
+
+    @PostMapping("/resetarSenha")
+    public ResponseEntity<String> resetarSenha(@RequestBody RecuperarSenhaDto recuperarSenhaDto) {
+        usuarioService.resetPassword(recuperarSenhaDto.senha(), recuperarSenhaDto.email());
+        return ResponseEntity.ok("Senha resetada com sucesso.");
+    }
+
 }
