@@ -27,10 +27,12 @@ public class SessaoController {
 
 
   @PostMapping()
-  public ResponseEntity<String> adicionarSessao(@RequestBody SessaoDto sessaoDto, @RequestParam String emailMentor,
-                                                @RequestParam String emailMentorado)
+  public ResponseEntity<Sessao> adicionarSessao(@RequestBody SessaoDto sessaoDto)
           throws Exception {
-    String sessaoCriada = sessaoService.createSessao(sessaoDto.sessao(),emailMentor, emailMentorado);
+    var sessao = new Sessao();
+    sessao.setDataHoraInicial(sessaoDto.getDataHoraInicial());
+    sessao.setDataHoraFinal(sessaoDto.getDataHoraFinal());
+    Sessao sessaoCriada = sessaoService.createSessao(sessao, sessaoDto.getEmailMentor(), sessaoDto.getEmailMentorado());
     return ResponseEntity.status(HttpStatus.CREATED).body(sessaoCriada);
   }
 
