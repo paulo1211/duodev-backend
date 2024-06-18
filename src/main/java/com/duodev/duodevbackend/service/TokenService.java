@@ -24,7 +24,7 @@ public class TokenService {
         // Send the token via email
         emailService.sendTokenEmail(email, tokenValue); 
         
-        return tokenValue;
+        return tokenValue.trim();
     }
 
     public boolean isTokenUsed(String tokenValue) {

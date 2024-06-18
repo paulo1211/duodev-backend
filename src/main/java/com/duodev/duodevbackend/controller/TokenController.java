@@ -2,6 +2,7 @@ package com.duodev.duodevbackend.controller;
 
 import com.duodev.duodevbackend.service.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -11,8 +12,8 @@ public class TokenController {
     private TokenService tokenService;
 
     @PostMapping("/generateToken")
-    public String generateToken(@RequestParam String email) {
-        return tokenService.createToken(email);
+    public ResponseEntity<String> generateToken(@RequestParam String email) {
+        return ResponseEntity.ok().body(tokenService.createToken(email));
     }
 
     @GetMapping("/checkToken/{token}")
