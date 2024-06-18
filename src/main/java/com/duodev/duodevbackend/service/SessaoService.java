@@ -115,14 +115,11 @@ public class SessaoService {
 
     }
 
-    public String createSessao(Sessao novaSessao, String emailMentor, String emailMentorado) throws IOException {
-        String retorno = "";
+    public Sessao createSessao(Sessao novaSessao, String emailMentor, String emailMentorado) {
         if (novaSessao.getDataHoraInicial().isAfter(novaSessao.getDataHoraFinal())) {
-            retorno = "A data de inicío não pode ser posterior que a data final.";
-            return retorno;
+            throw new RuntimeException("A data de inicío não pode ser posterior que a data final.");
         } else if (novaSessao.getDataHoraInicial().isBefore(java.time.LocalDateTime.now())) {
-            retorno = "A data de inicío não pode ser anterior que a data atual.";
-            return retorno;
+            throw new RuntimeException("A data de inicío não pode ser anterior que a data atual.");
         } else {
             novaSessao.setStatus(Status.PENDENTE);
             novaSessao.setLinkMeet("pendente");
@@ -132,10 +129,8 @@ public class SessaoService {
             sessaoRepository.save(novaSessao);
 
             sendInviteInEmail(emailMentor, novaSessao, emailMentorado);
-            retorno = "Sessão criada com sucesso!";
-            return retorno;
+            return novaSessao;
         }
-
     }
 
 
@@ -193,6 +188,14 @@ public class SessaoService {
                 .setTimeZone("America/Sao_Paulo");
         event.setEnd(end);
 
+        Event.Creator creator = new Event.Creator();
+        creator.setEmail(emailMentor);
+        event.setCreator(creator);
+
+        Event.Organizer organizer = new Event.Organizer();
+        organizer.setEmail(emailMentor);
+        event.setOrganizer(organizer);
+
         EventAttendee[] attendees = new EventAttendee[]{
                 new EventAttendee().setEmail(emailMentor),
                 new EventAttendee().setEmail(emailMentorado),
@@ -210,6 +213,7 @@ public class SessaoService {
         ConferenceData conferenceData = new ConferenceData();
         conferenceData.setCreateRequest(createConferenceRequest);
         event.setConferenceData(conferenceData);
+
         Event createdEvent = service.events().insert(calendarId, event).setConferenceDataVersion(1).execute();
 
         novaSessao.setStatus(Status.AGENDADO);
@@ -225,20 +229,34 @@ public class SessaoService {
         return UUID.randomUUID().toString();
     }
 
-    public Boolean validateInvite(String inviteId) throws IOException {
+    public Boolean validateInviteAndCreateMentoria(String inviteId) throws IOException {
         Sessao sessao = sessaoRepository.findByInvite(inviteId);
         Email email = emailService.getEmailByInviteId(inviteId);
         Usuario mentor = usuarioService.getUsuarioByEmail(email.getSendTo());
         Usuario mentorado = usuarioService.getUsuarioByEmail(email.getRequestedBy());
 
+        if (mentor == null || mentorado == null) {
+            return false;
+        }
+
         if (sessao == null || sessao.getStatus() != Status.PENDENTE) {
             return false;
         } else  {
-            createMeetSession(sessao,mentorado.getEmail(), mentor.getEmail(), inviteId);
+            Mentoria mentoria = new Mentoria();
+            mentoria.setUsuarioMentor(mentor);
+            mentoria.setUsuarioMentorado(mentorado);
+            mentoria.setDataInicial(sessao.getDataHoraInicial().toLocalDate());
+
+            mentoriaService.createMentoria(mentoria);
+
+            sessao.setMentoria(mentoria);
+
+            sessaoRepository.save(sessao);
+
+            createMeetSession(sessao, mentorado.getEmail(), mentor.getEmail(), inviteId);
             return true;
         }
     }
-
 
     // tem que ver se deve estourar uma exceção mesmo
     public Sessao getSessaoById(int id) {
@@ -282,12 +300,13 @@ public class SessaoService {
 
     public String acceptSessao(String inviteId) throws IOException {
 
-        boolean validInvite = validateInvite(inviteId);
+        boolean validInvite = validateInviteAndCreateMentoria(inviteId);
 
         if (validInvite){
             Sessao sessao = sessaoRepository.findByInvite(inviteId);
             sessao.setStatus(Status.AGENDADO);
             sessaoRepository.save(sessao);
+
             return "Sessão aceita com sucesso!";
         } else {
             return "Sessão não encontrada ou já foi aceita.";
